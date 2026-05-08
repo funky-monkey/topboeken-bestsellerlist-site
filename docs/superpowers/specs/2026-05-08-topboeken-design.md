@@ -1,6 +1,7 @@
 # TopBoeken — Design Spec
 **Date:** 2026-05-08  
 **Status:** Approved  
+**UI Prototypes:** [`_proto/`](../../../_proto/README.md) — open any `.html` file directly in a browser to preview the design iterations. Start with `layout-v7.html` for the final approved direction.
 
 ---
 

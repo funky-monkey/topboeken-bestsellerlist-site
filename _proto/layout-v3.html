@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TopBoeken — Mockup v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f9f9f7;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-weight: 400;
+    color: #232323;
+  }
+
+  /* ─── TYPOGRAPHY SYSTEM ─── */
+  /* Surrounding/article words: Libre Baskerville light serif */
+  /* Brand / key names: Helvetica Neue bold sans-serif */
+  .sans { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; }
+
+  /* ─── NAV ─── */
+  nav {
+    background: #fff;
+    border-bottom: 1px solid #ebebeb;
+    padding: 0 48px;
+  }
+  .nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  .nav-logo {
+    font-size: 22px;
+    font-weight: 400;
+    color: #232323;
+    letter-spacing: -0.3px;
+  }
+  .nav-logo .sans {
+    font-size: 24px;
+    letter-spacing: -0.5px;
+  }
+  .nav-search {
+    background: #f1f1ef;
+    border: none;
+    border-radius: 24px;
+    padding: 8px 20px;
+    font-size: 14px;
+    color: #888;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    width: 300px;
+    outline: none;
+  }
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    font-size: 14px;
+    color: #666;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+
+  /* ─── MAIN WRAP ─── */
+  .site-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 48px 80px;
+  }
+
+  /* ─── GENRE PILLS ─── */
+  .pills-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 28px 0 24px;
+  }
+  .pill {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 18px;
+    border-radius: 24px;
+    cursor: pointer;
+  }
+  .pill.active { background: #232323; color: #fff; }
+  .pill.inactive { background: #fff; color: #555; border: 1.5px solid #ddd; }
+
+  /* ─── SOURCE SECTION ─── */
+  .source-section { margin-bottom: 48px; }
+
+  .source-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .source-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 24px;
+    font-weight: 400;
+    color: #1a1a1a;
+    line-height: 1;
+  }
+  .source-heading .sans { font-size: 26px; letter-spacing: -0.5px; }
+  .source-accent { width: 5px; height: 24px; border-radius: 3px; flex-shrink: 0; }
+  .source-flag { font-size: 11px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 600; color: #999; background: #f1f1ef; padding: 2px 8px; border-radius: 4px; }
+  .source-more {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    color: #888;
+    letter-spacing: 0.2px;
+  }
+
+  /* ─── BOOK GRID: big #1 + 2×5 grid ─── */
+  .book-grid {
+    display: grid;
+    /* Col 0 = big book (2× small width). Cols 1-5 = equal small books */
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  /* #1 book spans both rows */
+  .book-big {
+    grid-row: 1 / 3;
+    grid-column: 1 / 2;
+  }
+
+  /* ─── BOOK CARD ─── */
+  .book-card {
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    transition: box-shadow 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+  }
+  .book-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+    transform: translateY(-2px);
+  }
+
+  .book-cover {
+    width: 100%;
+    aspect-ratio: 7/10;
+    position: relative;
+    overflow: hidden;
+  }
+  .book-cover-fill {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .rank-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 5px;
+    color: #fff;
+    letter-spacing: 0.3px;
+  }
+
+  .book-meta {
+    padding: 10px 10px 12px;
+    flex: 1;
+  }
+  .book-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+    margin-bottom: 3px;
+  }
+  .book-author {
+    font-size: 12px;
+    color: #888;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 400;
+  }
+  .book-stars {
+    font-size: 11px;
+    color: #f59e0b;
+    margin-top: 5px;
+    letter-spacing: 1px;
+  }
+
+  /* Big card meta gets bigger text */
+  .book-big .book-meta { padding: 14px 14px 16px; }
+  .book-big .book-title { font-size: 18px; line-height: 1.25; margin-bottom: 6px; }
+  .book-big .book-author { font-size: 14px; }
+  .book-big .book-stars { font-size: 14px; margin-top: 8px; }
+
+  /* ─── "NEXT" CARD ─── */
+  .book-next {
+    background: #f1f1ef;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    gap: 10px;
+    box-shadow: none;
+    border: 1.5px dashed #d4d4d0;
+    transition: background 0.15s;
+    aspect-ratio: 7/10;
+  }
+  .book-next:hover { background: #eaeae6; }
+  .book-next-icon {
+    font-size: 28px;
+    color: #999;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    line-height: 1;
+  }
+  .book-next-label {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider { border: none; border-top: 1px solid #e5e5e5; margin: 48px 0; }
+  .section-label {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #bbb;
+    margin-bottom: 32px;
+  }
+
+  /* ─── DETAIL PAGE ─── */
+  .detail-wrap {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+
+  .detail-hero {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: 520px;
+  }
+
+  .detail-cover-col {
+    background: #f1f1ef;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 48px 32px;
+  }
+  .detail-cover-img {
+    width: 100%;
+    aspect-ratio: 7/10;
+    background: linear-gradient(145deg, #c8ccd4 0%, #8890a8 100%);
+    border-radius: 6px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.22), 6px 0 16px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  .detail-cover-spine {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 12px;
+    background: rgba(0,0,0,0.12);
+    border-radius: 6px 0 0 6px;
+  }
+
+  .detail-info-col {
+    padding: 52px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .detail-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .detail-tag {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .detail-tag-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  .detail-title {
+    font-size: 44px;
+    font-weight: 400;
+    color: #1a1a1a;
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+  .detail-title .sans {
+    font-size: 46px;
+    letter-spacing: -1.5px;
+  }
+
+  .detail-author {
+    font-size: 17px;
+    color: #666;
+  }
+  .detail-author strong {
+    color: #1a1a1a;
+    font-weight: 700;
+  }
+
+  .detail-rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stars { font-size: 18px; color: #f59e0b; letter-spacing: 2px; }
+  .rating-text {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    color: #999;
+  }
+
+  .detail-meta {
+    display: flex;
+    gap: 32px;
+    padding: 20px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .meta-label {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #bbb;
+  }
+  .meta-value {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #232323;
+  }
+
+  .detail-summary {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #555;
+    max-width: 560px;
+  }
+
+  .buy-buttons { display: flex; gap: 12px; }
+  .btn {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 14px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.2px;
+  }
+  .btn-bol { background: #0000a4; color: #fff; }
+  .btn-amazon { background: #ff9900; color: #111; }
+
+  .lists-on { padding: 32px 56px; border-top: 1px solid #f0f0f0; }
+  .lists-heading {
+    font-size: 16px;
+    font-weight: 400;
+    color: #1a1a1a;
+    margin-bottom: 14px;
+  }
+  .lists-heading .sans { font-size: 17px; }
+  .list-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+  .list-tag {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1.5px solid #e5e5e5;
+    border-radius: 6px;
+    padding: 7px 14px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">De <span class="sans">TopBoeken</span> Lijst</div>
+    <input class="nav-search" placeholder="🔍  Zoek een boek of auteur…">
+    <div class="nav-links">
+      <span>Categorieën</span>
+      <span>Lijsten</span>
+      <span>Over ons</span>
+    </div>
+  </div>
+</nav>
+
+<div class="site-wrap">
+
+  <!-- GENRE PILLS -->
+  <div class="pills-row">
+    <div class="pill active">Alle genres</div>
+    <div class="pill inactive">Fictie</div>
+    <div class="pill inactive">Non-fictie</div>
+    <div class="pill inactive">Thriller</div>
+    <div class="pill inactive">Biografie</div>
+    <div class="pill inactive">Kookboeken</div>
+    <div class="pill inactive">Lifestyle</div>
+    <div class="pill inactive">Kinderen</div>
+  </div>
+
+  <!-- ── BESTELLER 60 ── -->
+  <div class="source-section">
+    <div class="source-header">
+      <div class="source-heading">
+        <div class="source-accent" style="background:#3b82f6"></div>
+        De <span class="sans">Besteller 60</span>
+        <span class="source-flag">🇳🇱 NL</span>
+      </div>
+      <span class="source-more">Bekijk alle 60 titels →</span>
+    </div>
+
+    <div class="book-grid">
+      <!-- #1 BIG -->
+      <div class="book-card book-big">
+        <div class="book-cover">
+          <div class="book-cover-fill" style="background:linear-gradient(145deg,#c8cad4 0%,#7880a8 100%);height:100%"></div>
+          <span class="rank-badge" style="background:#3b82f6">#1</span>
+        </div>
+        <div class="book-meta">
+          <div class="book-title">De Ontdekking van de Hemel</div>
+          <div class="book-author">Anna de Vries</div>
+          <div class="book-stars">★★★★★</div>
+        </div>
+      </div>
+
+      <!-- Row 1: #2–#6 -->
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#c8d4d0 0%,#78a890 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#2</span></div>
+        <div class="book-meta"><div class="book-title">Stilte voor de Storm</div><div class="book-author">Jan Bakker</div><div class="book-stars">★★★★☆</div></div>
+      </div>
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4c8c8 0%,#a87878 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#3</span></div>
+        <div class="book-meta"><div class="book-title">Het Laatste Woord</div><div class="book-author">Lisa Smit</div><div class="book-stars">★★★★☆</div></div>
+      </div>
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4d0c8 0%,#a8a078 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#4</span></div>
+        <div class="book-meta"><div class="book-title">Schemer</div><div class="book-author">Peter van Dam</div><div class="book-stars">★★★★★</div></div>
+      </div>
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#c8d4c8 0%,#78a878 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#5</span></div>
+        <div class="book-meta"><div class="book-title">Tussen Twee Werelden</div><div class="book-author">Maria Jansen</div><div class="book-stars">★★★☆☆</div></div>
+      </div>
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4c8d4 0%,#a878a8 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#6</span></div>
+        <div class="book-meta"><div class="book-title">De Verborgen Deur</div><div class="book-author">Kees Visser</div><div class="book-stars">★★★★☆</div></div>
+      </div>
+
+      <!-- Row 2: #7–#10 + next button -->
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4cac0 0%,#a89070 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#7</span></div>
+        <div class="book-meta"><div class="book-title">Nachtlicht</div><div class="book-author">Sophie Hendriks</div><div class="book-stars">★★★★☆</div></div>
+      </div>
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#c4cad4 0%,#7888a8 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#8</span></div>
+        <div class="book-meta"><div class="book-title">Oud Bloed</div><div class="book-author">Tom de Wit</div><div class="book-stars">★★★★★</div></div>
+      </div>
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#ccc8d4 0%,#8878a8 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#9</span></div>
+        <div class="book-meta"><div class="book-title">Verre Horizon</div><div class="book-author">Inge Brouwer</div><div class="book-stars">★★★★☆</div></div>
+      </div>
+      <div class="book-card">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4c8ca 0%,#a87880 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#10</span></div>
+        <div class="book-meta"><div class="book-title">Het Derde Leven</div><div class="book-author">Frank Meijer</div><div class="book-stars">★★★★☆</div></div>
+      </div>
+      <!-- NEXT BUTTON -->
+      <div style="display:flex;flex-direction:column;">
+        <div class="book-next" style="flex:1">
+          <div class="book-next-icon">›</div>
+          <div class="book-next-label">Meer<br>bekijken</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NY TIMES ── -->
+  <div class="source-section">
+    <div class="source-header">
+      <div class="source-heading">
+        <div class="source-accent" style="background:#e8b84b"></div>
+        De <span class="sans">NY Times</span> Bestsellers
+        <span class="source-flag">🇺🇸 US</span>
+      </div>
+      <span class="source-more">Bekijk alle →</span>
+    </div>
+
+    <div class="book-grid">
+      <div class="book-card book-big">
+        <div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4c8aa 0%,#a8906a 100%);height:100%"></div><span class="rank-badge" style="background:#e8b84b;color:#000">#1</span></div>
+        <div class="book-meta"><div class="book-title">The Last Hour</div><div class="book-author">James Carter</div><div class="book-stars">★★★★★</div></div>
+      </div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#aac4d4 0%,#6a90a8 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#2</span></div><div class="book-meta"><div class="book-title">Midnight Run</div><div class="book-author">Emily Stone</div><div class="book-stars">★★★★☆</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#c4d4aa 0%,#90a86a 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#3</span></div><div class="book-meta"><div class="book-title">Silent Ocean</div><div class="book-author">Mark Williams</div><div class="book-stars">★★★★☆</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4aab4 0%,#a86a78 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#4</span></div><div class="book-meta"><div class="book-title">The Return</div><div class="book-author">Sarah Johnson</div><div class="book-stars">★★★★★</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#b4aad4 0%,#786aa8 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#5</span></div><div class="book-meta"><div class="book-title">Dark Waters</div><div class="book-author">Chris Lee</div><div class="book-stars">★★★☆☆</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#aad4c4 0%,#6aa890 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#6</span></div><div class="book-meta"><div class="book-title">The Hollow</div><div class="book-author">Amy Turner</div><div class="book-stars">★★★★☆</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4b4aa 0%,#a8786a 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#7</span></div><div class="book-meta"><div class="book-title">Lost Signal</div><div class="book-author">David Park</div><div class="book-stars">★★★★☆</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#c4aad4 0%,#906aa8 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#8</span></div><div class="book-meta"><div class="book-title">Echo Chamber</div><div class="book-author">Rachel Green</div><div class="book-stars">★★★★★</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#aabcd4 0%,#6a80a8 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#9</span></div><div class="book-meta"><div class="book-title">The Edge</div><div class="book-author">Lisa Monroe</div><div class="book-stars">★★★★☆</div></div></div>
+      <div class="book-card"><div class="book-cover"><div class="book-cover-fill" style="background:linear-gradient(145deg,#d4d0aa 0%,#a8a06a 100%);height:100%"></div><span class="rank-badge" style="background:#64748b">#10</span></div><div class="book-meta"><div class="book-title">Winter Storm</div><div class="book-author">Paul Davis</div><div class="book-stars">★★★★☆</div></div></div>
+      <div style="display:flex;flex-direction:column;"><div class="book-next" style="flex:1"><div class="book-next-icon">›</div><div class="book-next-label">Meer<br>bekijken</div></div></div>
+    </div>
+  </div>
+
+  <!-- ─── DIVIDER + DETAIL PAGE ─── -->
+  <hr class="divider">
+  <div class="section-label">↓ Detailpagina — na klikken op een boek</div>
+
+  <div class="detail-wrap">
+    <!-- HERO: big cover + info -->
+    <div class="detail-hero">
+      <div class="detail-cover-col">
+        <div class="detail-cover-img">
+          <div class="detail-cover-spine"></div>
+        </div>
+      </div>
+
+      <div class="detail-info-col">
+        <div class="detail-tags">
+          <div class="detail-tag" style="background:#eff6ff;color:#3b82f6"><div class="detail-tag-dot" style="background:#3b82f6"></div>Besteller 60 &nbsp;#1</div>
+          <div class="detail-tag" style="background:#fffbeb;color:#d97706"><div class="detail-tag-dot" style="background:#e8b84b"></div>NY Times &nbsp;#3</div>
+        </div>
+
+        <div class="detail-title">De <span class="sans">Ontdekking</span> van de Hemel</div>
+
+        <div class="detail-author">door <strong>Anna de Vries</strong></div>
+
+        <div class="detail-rating">
+          <div class="stars">★★★★★</div>
+          <div class="rating-text">4,8 · 2.341 beoordelingen</div>
+        </div>
+
+        <div class="detail-meta">
+          <div class="meta-item"><div class="meta-label">Genre</div><div class="meta-value">Fictie</div></div>
+          <div class="meta-item"><div class="meta-label">Uitgever</div><div class="meta-value">De Bezige Bij</div></div>
+          <div class="meta-item"><div class="meta-label">Pagina's</div><div class="meta-value">368</div></div>
+          <div class="meta-item"><div class="meta-label">ISBN</div><div class="meta-value">978-90-234-1234-5</div></div>
+          <div class="meta-item"><div class="meta-label">Taal</div><div class="meta-value">Nederlands</div></div>
+        </div>
+
+        <div class="detail-summary">
+          Een meeslepend verhaal over verlies, herinneringen en de onverwachte plekken waar we troost vinden. Anna de Vries neemt de lezer mee op een reis door het naoorlogse Nederland, waarbij verleden en heden elkaar op verrassende wijze raken.
+        </div>
+
+        <div class="buy-buttons">
+          <div class="btn btn-bol">📦 &nbsp;Kopen op bol.com — €22,99</div>
+          <div class="btn btn-amazon">🛒 &nbsp;Kopen op Amazon — €21,50</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTS -->
+    <div class="lists-on">
+      <div class="lists-heading">Staat op deze <span class="sans">lijsten</span></div>
+      <div class="list-tags">
+        <div class="list-tag"><div style="width:8px;height:8px;border-radius:50%;background:#3b82f6"></div>Besteller 60 &nbsp;·&nbsp; <strong>#1</strong></div>
+        <div class="list-tag"><div style="width:8px;height:8px;border-radius:50%;background:#e8b84b"></div>NY Times Fictie &nbsp;·&nbsp; <strong>#3</strong></div>
+        <div class="list-tag"><div style="width:8px;height:8px;border-radius:50%;background:#10b981"></div>bol.com Fictie &nbsp;·&nbsp; <strong>#5</strong></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

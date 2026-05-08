@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TopBoeken — Mockup v6 (real covers)</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f5f4f1; font-family: 'Libre Baskerville', Georgia, serif; color: #232323; }
+  .sans { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 700; }
+
+  .site-wrap { max-width: 1400px; margin: 0 auto; padding: 0 48px; }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 72px; border-bottom: 1px solid #e8e8e4; margin-bottom: 32px; }
+  .nav-logo { font-size: 22px; font-weight: 400; color: #232323; letter-spacing: -0.3px; }
+  .nav-logo .sans { font-size: 24px; letter-spacing: -0.6px; }
+  .nav-right { display: flex; align-items: center; gap: 28px; }
+  .nav-search { background: #eeecea; border: none; border-radius: 24px; padding: 8px 20px; font-size: 14px; color: #888; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; width: 260px; outline: none; }
+  .nav-links { display: flex; gap: 24px; font-size: 14px; color: #666; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+
+  .pills-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px; }
+  .pill { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 500; padding: 7px 18px; border-radius: 24px; cursor: pointer; }
+  .pill.active { background: #232323; color: #fff; }
+  .pill.inactive { background: #fff; color: #555; border: 1.5px solid #ddd; }
+
+  .source-section { margin-bottom: 48px; }
+  .source-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .source-heading { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 400; line-height: 1; color: #1a1a1a; }
+  .source-heading .sans { font-size: 26px; letter-spacing: -0.5px; }
+  .source-accent { width: 5px; height: 24px; border-radius: 3px; flex-shrink: 0; }
+  .source-flag { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; color: #999; background: #eeecea; padding: 2px 8px; border-radius: 4px; }
+  .source-more { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #999; }
+
+  .book-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 3px;
+  }
+
+  .book-card {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 7/10;
+    background: #d8d6d0;
+    border-radius: 0;
+  }
+  .book-big {
+    grid-row: 1 / 3;
+    grid-column: 1 / 2;
+    aspect-ratio: unset;
+  }
+
+  /* Real cover image */
+  .book-cover-fill {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: filter 0.25s ease;
+    display: block;
+  }
+
+  .rank-badge {
+    position: absolute; top: 8px; left: 8px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 11px; font-weight: 700; padding: 3px 7px;
+    color: #fff; z-index: 2; transition: opacity 0.2s; border-radius: 0;
+  }
+
+  .book-hover { position: absolute; inset: 0; display: flex; align-items: flex-end; pointer-events: none; }
+  .book-hover-panel {
+    width: 100%; padding: 14px 12px 12px;
+    background: rgba(8, 8, 8, 0.52);
+    backdrop-filter: blur(14px) saturate(1.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    transform: translateY(100%);
+    transition: transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .book-card:hover .book-cover-fill { filter: blur(2px) brightness(0.8); }
+  .book-card:hover .book-hover-panel { transform: translateY(0); }
+  .book-card:hover .rank-badge { opacity: 0; }
+
+  .hover-title { font-size: 12px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 3px; }
+  .hover-author { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 5px; }
+  .hover-stars { font-size: 10px; color: #f59e0b; letter-spacing: 1px; }
+
+  .book-big .book-hover-panel { padding: 22px 18px 18px; }
+  .book-big .hover-title { font-size: 18px; margin-bottom: 5px; }
+  .book-big .hover-author { font-size: 13px; margin-bottom: 7px; }
+  .book-big .hover-stars { font-size: 13px; }
+
+  .book-next {
+    background: #eeecea; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+    border: 1.5px dashed #ccc; aspect-ratio: 7/10; border-radius: 0; transition: background 0.15s;
+  }
+  .book-next:hover { background: #e5e4e0; }
+  .book-next-icon { font-size: 32px; color: #aaa; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 200; line-height: 1; }
+  .book-next-label { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 600; color: #aaa; text-align: center; line-height: 1.4; }
+
+  .divider { border: none; border-top: 1px solid #e0dfdb; margin: 56px 0; }
+  .section-label { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #bbb; margin-bottom: 28px; }
+
+  /* DETAIL */
+  .detail-wrap { background: #fff; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .detail-hero { display: grid; grid-template-columns: 460px 1fr; min-height: 580px; }
+  .detail-cover-col { background: #eeecea; display: flex; align-items: center; justify-content: center; padding: 56px 44px; }
+  .detail-cover-img {
+    width: 100%; aspect-ratio: 7/10;
+    box-shadow: 0 20px 56px rgba(0,0,0,0.24), 6px 0 18px rgba(0,0,0,0.1);
+    position: relative; overflow: hidden; border-radius: 0;
+  }
+  .detail-cover-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .detail-cover-spine { position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: rgba(0,0,0,0.10); }
+  .detail-info-col { padding: 52px 56px; display: flex; flex-direction: column; gap: 20px; justify-content: center; }
+  .detail-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .detail-tag { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 3px; display: flex; align-items: center; gap: 5px; }
+  .detail-tag-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .detail-title { font-size: 42px; font-weight: 400; color: #1a1a1a; line-height: 1.1; letter-spacing: -1px; }
+  .detail-title .sans { font-size: 44px; letter-spacing: -1.5px; }
+  .detail-author { font-size: 17px; color: #666; }
+  .detail-author strong { color: #1a1a1a; font-weight: 700; }
+  .detail-rating { display: flex; align-items: center; gap: 10px; }
+  .stars { font-size: 18px; color: #f59e0b; letter-spacing: 2px; }
+  .rating-text { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #999; }
+  .detail-meta { display: flex; gap: 32px; padding: 20px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .meta-label { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #bbb; }
+  .meta-value { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #232323; }
+  .detail-summary { font-size: 15px; line-height: 1.8; color: #555; max-width: 540px; }
+  .buy-buttons { display: flex; gap: 12px; }
+  .btn { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; padding: 14px 24px; border-radius: 0; cursor: pointer; }
+  .btn-bol { background: #0000a4; color: #fff; }
+  .btn-amazon { background: #ff9900; color: #111; }
+  .lists-on { padding: 28px 56px; border-top: 1px solid #f0f0ee; }
+  .lists-heading { font-size: 16px; font-weight: 400; color: #1a1a1a; margin-bottom: 14px; }
+  .lists-heading .sans { font-size: 17px; }
+  .list-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+  .list-tag { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; border: 1.5px solid #e5e5e5; border-radius: 0; padding: 7px 14px; color: #555; display: flex; align-items: center; gap: 7px; }
+</style>
+</head>
+<body>
+<div class="site-wrap">
+
+  <nav class="nav">
+    <div class="nav-logo">De <span class="sans">TopBoeken</span> Lijst</div>
+    <div class="nav-right">
+      <input class="nav-search" placeholder="🔍  Zoek een boek of auteur…">
+      <div class="nav-links"><span>Categorieën</span><span>Lijsten</span><span>Over ons</span></div>
+    </div>
+  </nav>
+
+  <div class="pills-row">
+    <div class="pill active">Alle genres</div>
+    <div class="pill inactive">Fictie</div>
+    <div class="pill inactive">Non-fictie</div>
+    <div class="pill inactive">Thriller</div>
+    <div class="pill inactive">Biografie</div>
+    <div class="pill inactive">Kookboeken</div>
+    <div class="pill inactive">Lifestyle</div>
+    <div class="pill inactive">Kinderen</div>
+  </div>
+
+  <!-- BESTELLER 60 — Dutch bestsellers (Open Library covers) -->
+  <div class="source-section">
+    <div class="source-header">
+      <div class="source-heading">
+        <div class="source-accent" style="background:#3b82f6"></div>
+        De <span class="sans">Besteller 60</span>
+        <span class="source-flag">🇳🇱 NL</span>
+      </div>
+      <span class="source-more">Bekijk alle 60 titels →</span>
+    </div>
+    <div class="book-grid">
+
+      <!-- #1 BIG — Atomic Habits -->
+      <div class="book-card book-big">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg" alt="Atomic Habits" onerror="this.style.background='linear-gradient(145deg,#b8c0d4,#6070a0)';this.remove()">
+        <span class="rank-badge" style="background:#3b82f6">#1</span>
+        <div class="book-hover"><div class="book-hover-panel">
+          <div class="hover-title">Atomic Habits</div>
+          <div class="hover-author">James Clear</div>
+          <div class="hover-stars">★★★★★</div>
+        </div></div>
+      </div>
+
+      <!-- Row 1: #2–#6 -->
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780525559474-L.jpg" alt="The Midnight Library" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#b8d4c8,#60a080);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#2</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">The Midnight Library</div><div class="hover-author">Matt Haig</div><div class="hover-stars">★★★★☆</div></div></div>
+      </div>
+
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780735224292-L.jpg" alt="Where the Crawdads Sing" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4c8b0,#a09060);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#3</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Where the Crawdads Sing</div><div class="hover-author">Delia Owens</div><div class="hover-stars">★★★★☆</div></div></div>
+      </div>
+
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780593135204-L.jpg" alt="Project Hail Mary" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#b8c8d4,#6080a0);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#4</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Project Hail Mary</div><div class="hover-author">Andy Weir</div><div class="hover-stars">★★★★★</div></div></div>
+      </div>
+
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780241425442-L.jpg" alt="The Thursday Murder Club" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#d0b8d4,#9860a0);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#5</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">The Thursday Murder Club</div><div class="hover-author">Richard Osman</div><div class="hover-stars">★★★★☆</div></div></div>
+      </div>
+
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780593318171-L.jpg" alt="Klara and the Sun" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4d0b8,#a09860);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#6</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Klara and the Sun</div><div class="hover-author">Kazuo Ishiguro</div><div class="hover-stars">★★★★☆</div></div></div>
+      </div>
+
+      <!-- Row 2: #7–#10 + next -->
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9781984822178-L.jpg" alt="Normal People" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4c8b8,#a08860);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#7</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Normal People</div><div class="hover-author">Sally Rooney</div><div class="hover-stars">★★★★☆</div></div></div>
+      </div>
+
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780062315007-L.jpg" alt="The Alchemist" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#c8b8d4,#8060a0);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#8</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">The Alchemist</div><div class="hover-author">Paulo Coelho</div><div class="hover-stars">★★★★★</div></div></div>
+      </div>
+
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780441013593-L.jpg" alt="Dune" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4c8b0,#a09060);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#9</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Dune</div><div class="hover-author">Frank Herbert</div><div class="hover-stars">★★★★★</div></div></div>
+      </div>
+
+      <div class="book-card">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9781250178602-L.jpg" alt="The Four Winds" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#b0c4d4,#6080a0);z-index:-1"></div>
+        <span class="rank-badge" style="background:#475569">#10</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">The Four Winds</div><div class="hover-author">Kristin Hannah</div><div class="hover-stars">★★★★☆</div></div></div>
+      </div>
+
+      <div class="book-next">
+        <div class="book-next-icon">›</div>
+        <div class="book-next-label">Meer<br>bekijken</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NY TIMES -->
+  <div class="source-section">
+    <div class="source-header">
+      <div class="source-heading">
+        <div class="source-accent" style="background:#e8b84b"></div>
+        De <span class="sans">NY Times</span> Bestsellers
+        <span class="source-flag">🇺🇸 US</span>
+      </div>
+      <span class="source-more">Bekijk alle →</span>
+    </div>
+    <div class="book-grid">
+      <div class="book-card book-big">
+        <img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780385547239-L.jpg" alt="The Covenant of Water" onerror="this.style.display='none'">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4c8b0,#a09060);z-index:-1"></div>
+        <span class="rank-badge" style="background:#e8b84b;color:#000">#1</span>
+        <div class="book-hover"><div class="book-hover-panel"><div class="hover-title">The Covenant of Water</div><div class="hover-author">Abraham Verghese</div><div class="hover-stars">★★★★★</div></div></div>
+      </div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780593499085-L.jpg" alt="Tomorrow" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#b0c4d4,#6080a0);z-index:-1"></div><span class="rank-badge" style="background:#475569">#2</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Hello Beautiful</div><div class="hover-author">Ann Napolitano</div><div class="hover-stars">★★★★☆</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9781668010976-L.jpg" alt="Lessons in Chemistry" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#c4d4b0,#80a060);z-index:-1"></div><span class="rank-badge" style="background:#475569">#3</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Lessons in Chemistry</div><div class="hover-author">Bonnie Garmus</div><div class="hover-stars">★★★★☆</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780385549332-L.jpg" alt="Tomorrow" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4b0b8,#a06068);z-index:-1"></div><span class="rank-badge" style="background:#475569">#4</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Fourth Wing</div><div class="hover-author">Rebecca Yarros</div><div class="hover-stars">★★★★★</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780385547727-L.jpg" alt="Iron Flame" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#b8b0d4,#6860a0);z-index:-1"></div><span class="rank-badge" style="background:#475569">#5</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Iron Flame</div><div class="hover-author">Rebecca Yarros</div><div class="hover-stars">★★★☆☆</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780063230491-L.jpg" alt="Happy Place" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#b0d4c8,#60a088);z-index:-1"></div><span class="rank-badge" style="background:#475569">#6</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Happy Place</div><div class="hover-author">Emily Henry</div><div class="hover-stars">★★★★☆</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780593597033-L.jpg" alt="Tomorrow" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4b8b0,#a07860);z-index:-1"></div><span class="rank-badge" style="background:#475569">#7</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Holly</div><div class="hover-author">Stephen King</div><div class="hover-stars">★★★★☆</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780385548922-L.jpg" alt="Tomorrow" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#c0b0d4,#7860a0);z-index:-1"></div><span class="rank-badge" style="background:#475569">#8</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Tomorrow, and Tomorrow</div><div class="hover-author">Gabrielle Zevin</div><div class="hover-stars">★★★★★</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780593311264-L.jpg" alt="Horse" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#b0bcd4,#6070a0);z-index:-1"></div><span class="rank-badge" style="background:#475569">#9</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Horse</div><div class="hover-author">Geraldine Brooks</div><div class="hover-stars">★★★★☆</div></div></div></div>
+      <div class="book-card"><img class="book-cover-fill" src="https://covers.openlibrary.org/b/isbn/9780593321201-L.jpg" alt="Demon Copperhead" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(145deg,#d4d0b0,#a09860);z-index:-1"></div><span class="rank-badge" style="background:#475569">#10</span><div class="book-hover"><div class="book-hover-panel"><div class="hover-title">Demon Copperhead</div><div class="hover-author">Barbara Kingsolver</div><div class="hover-stars">★★★★☆</div></div></div></div>
+      <div class="book-next"><div class="book-next-icon">›</div><div class="book-next-label">Meer<br>bekijken</div></div>
+    </div>
+  </div>
+
+  <!-- DETAIL PAGE -->
+  <hr class="divider">
+  <div class="section-label">↓ Detailpagina</div>
+
+  <div class="detail-wrap">
+    <div class="detail-hero">
+      <div class="detail-cover-col">
+        <div class="detail-cover-img">
+          <img src="https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg" alt="Atomic Habits" style="width:100%;height:100%;object-fit:cover;display:block">
+          <div class="detail-cover-spine"></div>
+        </div>
+      </div>
+      <div class="detail-info-col">
+        <div class="detail-tags">
+          <div class="detail-tag" style="background:#eff6ff;color:#3b82f6"><div class="detail-tag-dot" style="background:#3b82f6"></div>Besteller 60 &nbsp;#1</div>
+          <div class="detail-tag" style="background:#fffbeb;color:#d97706"><div class="detail-tag-dot" style="background:#e8b84b"></div>NY Times &nbsp;#4</div>
+        </div>
+        <div class="detail-title"><span class="sans">Atomic</span> Habits</div>
+        <div class="detail-author">door <strong>James Clear</strong></div>
+        <div class="detail-rating">
+          <div class="stars">★★★★★</div>
+          <div class="rating-text">4,9 · 84.231 beoordelingen</div>
+        </div>
+        <div class="detail-meta">
+          <div class="meta-item"><div class="meta-label">Genre</div><div class="meta-value">Non-fictie</div></div>
+          <div class="meta-item"><div class="meta-label">Uitgever</div><div class="meta-value">Avery</div></div>
+          <div class="meta-item"><div class="meta-label">Pagina's</div><div class="meta-value">320</div></div>
+          <div class="meta-item"><div class="meta-label">ISBN</div><div class="meta-value">9780735211292</div></div>
+          <div class="meta-item"><div class="meta-label">Taal</div><div class="meta-value">Engels</div></div>
+        </div>
+        <div class="detail-summary">Een bewezen raamwerk voor dagelijks gewoontes opbouwen. James Clear, een van de toonaangevende experts op het gebied van gewoontevorming, onthult praktische strategieën die je helpen elke dag een klein beetje beter te worden.</div>
+        <div class="buy-buttons">
+          <div class="btn btn-bol">📦 &nbsp;Kopen op bol.com — €22,99</div>
+          <div class="btn btn-amazon">🛒 &nbsp;Kopen op Amazon — €18,50</div>
+        </div>
+      </div>
+    </div>
+    <div class="lists-on">
+      <div class="lists-heading">Staat op deze <span class="sans">lijsten</span></div>
+      <div class="list-tags">
+        <div class="list-tag"><div style="width:8px;height:8px;border-radius:50%;background:#3b82f6"></div>Besteller 60 &nbsp;·&nbsp; <strong>#1</strong></div>
+        <div class="list-tag"><div style="width:8px;height:8px;border-radius:50%;background:#e8b84b"></div>NY Times Non-Fiction &nbsp;·&nbsp; <strong>#4</strong></div>
+        <div class="list-tag"><div style="width:8px;height:8px;border-radius:50%;background:#10b981"></div>bol.com Non-Fictie &nbsp;·&nbsp; <strong>#2</strong></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

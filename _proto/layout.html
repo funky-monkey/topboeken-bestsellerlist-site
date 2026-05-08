@@ -1,0 +1,139 @@
+<h2>Welke pagina-indeling spreekt je aan?</h2>
+<p class="subtitle">Voor de hoofdpagina met boekencategorieën</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f172a;padding:12px;border-radius:6px;font-family:sans-serif;font-size:11px;color:#94a3b8">
+        <div style="background:#1e293b;padding:6px 10px;border-radius:4px;margin-bottom:8px;display:flex;gap:16px;align-items:center">
+          <span style="color:#f8fafc;font-weight:700;font-size:13px">📚 TopBoeken</span>
+          <span style="margin-left:auto;color:#64748b;font-size:10px">Zoeken…</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="background:#1e293b;border-radius:4px;padding:20px 8px;width:120px;flex-shrink:0">
+            <div style="color:#f8fafc;font-weight:600;font-size:10px;margin-bottom:6px">Categorieën</div>
+            <div style="color:#3b82f6;font-size:9px;line-height:1.8">▶ Fictie<br>▶ Non-fictie<br>▶ Thriller<br>▶ Biografie<br>▶ Kookboeken<br>▶ Lifestyle<br>▶ NY Times<br>▶ Amazon</div>
+          </div>
+          <div style="flex:1">
+            <div style="color:#f8fafc;font-weight:600;font-size:10px;margin-bottom:6px">Besteller 60 — Fictie</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+              <div style="background:#1e293b;border-radius:3px;padding:5px;text-align:center">
+                <div style="background:#334155;height:40px;border-radius:2px;margin-bottom:3px"></div>
+                <div style="color:#f8fafc;font-size:8px;font-weight:600">Boektitel</div>
+                <div style="color:#64748b;font-size:7px">Auteur</div>
+              </div>
+              <div style="background:#1e293b;border-radius:3px;padding:5px;text-align:center">
+                <div style="background:#334155;height:40px;border-radius:2px;margin-bottom:3px"></div>
+                <div style="color:#f8fafc;font-size:8px;font-weight:600">Boektitel</div>
+                <div style="color:#64748b;font-size:7px">Auteur</div>
+              </div>
+              <div style="background:#1e293b;border-radius:3px;padding:5px;text-align:center">
+                <div style="background:#334155;height:40px;border-radius:2px;margin-bottom:3px"></div>
+                <div style="color:#f8fafc;font-size:8px;font-weight:600">Boektitel</div>
+                <div style="color:#64748b;font-size:7px">Auteur</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Zijbalk + raster</h3>
+      <p>Categorieën in een vaste zijbalk links, boeken in een raster rechts. Klassiek en makkelijk te navigeren.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f172a;padding:12px;border-radius:6px;font-family:sans-serif;font-size:11px;color:#94a3b8">
+        <div style="background:#1e293b;padding:6px 10px;border-radius:4px;margin-bottom:8px;display:flex;gap:16px;align-items:center">
+          <span style="color:#f8fafc;font-weight:700;font-size:13px">📚 TopBoeken</span>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
+          <span style="background:#3b82f6;color:#fff;border-radius:20px;padding:2px 8px;font-size:9px">Fictie</span>
+          <span style="background:#1e293b;color:#94a3b8;border-radius:20px;padding:2px 8px;font-size:9px">Non-fictie</span>
+          <span style="background:#1e293b;color:#94a3b8;border-radius:20px;padding:2px 8px;font-size:9px">Thriller</span>
+          <span style="background:#1e293b;color:#94a3b8;border-radius:20px;padding:2px 8px;font-size:9px">Biografie</span>
+          <span style="background:#1e293b;color:#94a3b8;border-radius:20px;padding:2px 8px;font-size:9px">NY Times</span>
+        </div>
+        <div style="color:#f8fafc;font-size:10px;font-weight:600;margin-bottom:5px">Bestsellers — Fictie</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:#1e293b;border-radius:3px;padding:5px;display:flex;gap:6px;align-items:center">
+            <div style="background:#334155;width:25px;height:35px;border-radius:2px;flex-shrink:0"></div>
+            <div>
+              <div style="color:#f8fafc;font-size:9px;font-weight:600">Boektitel van de week</div>
+              <div style="color:#64748b;font-size:8px">Auteur Naam · Fictie</div>
+              <div style="color:#f59e0b;font-size:8px">★★★★☆</div>
+            </div>
+            <div style="margin-left:auto;font-size:8px;color:#3b82f6">#1</div>
+          </div>
+          <div style="background:#1e293b;border-radius:3px;padding:5px;display:flex;gap:6px;align-items:center">
+            <div style="background:#334155;width:25px;height:35px;border-radius:2px;flex-shrink:0"></div>
+            <div>
+              <div style="color:#f8fafc;font-size:9px;font-weight:600">Nog een bestseller</div>
+              <div style="color:#64748b;font-size:8px">Andere Auteur · Fictie</div>
+              <div style="color:#f59e0b;font-size:8px">★★★★★</div>
+            </div>
+            <div style="margin-left:auto;font-size:8px;color:#3b82f6">#2</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Filter-pills + lijst</h3>
+      <p>Categorieën als klikbare pills bovenaan, boeken als compacte lijst met rang, cover, auteur en rating. Modern en snel te scannen.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f172a;padding:12px;border-radius:6px;font-family:sans-serif;font-size:11px;color:#94a3b8">
+        <div style="background:#1e293b;padding:6px 10px;border-radius:4px;margin-bottom:8px;display:flex;gap:16px;align-items:center">
+          <span style="color:#f8fafc;font-weight:700;font-size:13px">📚 TopBoeken</span>
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="color:#f8fafc;font-size:10px;font-weight:700;margin-bottom:4px;border-left:3px solid #3b82f6;padding-left:6px">Besteller 60 — Fictie</div>
+          <div style="display:flex;gap:4px;overflow:hidden">
+            <div style="background:#1e293b;border-radius:3px;padding:4px;text-align:center;min-width:45px">
+              <div style="background:#334155;height:35px;border-radius:2px;margin-bottom:2px"></div>
+              <div style="color:#f8fafc;font-size:7px">#1</div>
+            </div>
+            <div style="background:#1e293b;border-radius:3px;padding:4px;text-align:center;min-width:45px">
+              <div style="background:#334155;height:35px;border-radius:2px;margin-bottom:2px"></div>
+              <div style="color:#f8fafc;font-size:7px">#2</div>
+            </div>
+            <div style="background:#1e293b;border-radius:3px;padding:4px;text-align:center;min-width:45px">
+              <div style="background:#334155;height:35px;border-radius:2px;margin-bottom:2px"></div>
+              <div style="color:#f8fafc;font-size:7px">#3</div>
+            </div>
+            <div style="background:#334155;border-radius:3px;padding:4px;display:flex;align-items:center;justify-content:center;min-width:20px">
+              <span style="color:#94a3b8;font-size:10px">›</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="color:#f8fafc;font-size:10px;font-weight:700;margin-bottom:4px;border-left:3px solid #f59e0b;padding-left:6px">NY Times — Non-fictie</div>
+          <div style="display:flex;gap:4px;overflow:hidden">
+            <div style="background:#1e293b;border-radius:3px;padding:4px;text-align:center;min-width:45px">
+              <div style="background:#334155;height:35px;border-radius:2px;margin-bottom:2px"></div>
+              <div style="color:#f8fafc;font-size:7px">#1</div>
+            </div>
+            <div style="background:#1e293b;border-radius:3px;padding:4px;text-align:center;min-width:45px">
+              <div style="background:#334155;height:35px;border-radius:2px;margin-bottom:2px"></div>
+              <div style="color:#f8fafc;font-size:7px">#2</div>
+            </div>
+            <div style="background:#334155;border-radius:3px;padding:4px;display:flex;align-items:center;justify-content:center;min-width:20px">
+              <span style="color:#94a3b8;font-size:10px">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Per-bron secties</h3>
+      <p>Elke bron (Besteller 60, NY Times, bol.com…) krijgt een eigen horizontale rij. Scrollen door de bronnen, klikken voor meer.</p>
+    </div>
+  </div>
+
+</div>
