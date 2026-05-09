@@ -1,1 +1,10 @@
 .superpowers/
+node_modules/
+.env
+data/*.sqlite
+covers/*.jpg
+covers/*.png
+dist/
+dist-next/
+.astro/
+logs/
