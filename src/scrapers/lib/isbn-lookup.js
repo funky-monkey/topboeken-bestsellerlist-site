@@ -9,7 +9,7 @@ const SEARCH_URL = 'https://openlibrary.org/search.json';
 export async function lookupIsbn(title, author) {
   await limiter.wait();
 
-  const params = new URLSearchParams({ title, author, limit: '1', fields: 'isbn,title,author_name,publisher,number_of_pages_median,language,first_sentence' });
+  const params = new URLSearchParams({ title, author, limit: '1', fields: 'isbn,title,author_name,publisher,number_of_pages_median,language,first_sentence,cover_i' });
   const data = await fetchJson(`${SEARCH_URL}?${params}`);
 
   const doc = data.docs?.[0];
@@ -32,5 +32,7 @@ export async function lookupIsbn(title, author) {
     language:  typeof doc.language?.[0] === 'string' ? doc.language[0] : null,
     summary,
     coverUrl:  null,
+    // Open Library cover ID — more reliable than looking up by ISBN
+    coverId:   typeof doc.cover_i === 'number' ? doc.cover_i : null,
   };
 }

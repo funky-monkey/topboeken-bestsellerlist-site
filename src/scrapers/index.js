@@ -62,8 +62,9 @@ async function run() {
         const bookId = existing ? existing.id : upsertBook(bookData);
 
         upsertListEntry({ book_id: bookId, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
-        upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'bol-com',   url: `https://www.bol.com/nl/s/?searchtext=${bookData.isbn ?? entry.isbn}` });
-        upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'amazon-nl', url: `https://www.amazon.nl/s?k=${bookData.isbn ?? entry.isbn}` });
+        const searchQuery = encodeURIComponent(`${bookData.title ?? entry.title} ${bookData.author ?? entry.author}`);
+        upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'bol-com',   url: `https://www.bol.com/nl/s/?searchtext=${searchQuery}` });
+        upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'amazon-nl', url: `https://www.amazon.nl/s?k=${searchQuery}` });
       }
 
       db.prepare("UPDATE scrape_log SET finished_at=datetime('now'), books_added=?, books_updated=?, status='ok' WHERE id=?").run(added, updated, logId);

@@ -12,7 +12,7 @@ export async function enrichBook({ title, author, isbn: knownIsbn = null, summar
     if (!meta?.isbn) return null;
   }
 
-  const cover_path = await downloadCover(meta.isbn);
+  const cover_path = await downloadCover(meta.isbn, meta.coverId ?? null);
 
   return {
     isbn:             meta.isbn,
