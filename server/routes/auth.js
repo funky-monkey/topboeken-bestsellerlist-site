@@ -18,7 +18,7 @@ router.post('/login', async (req, res) => {
   if (!ok) return res.send(loginView('Ongeldig wachtwoord.'));
 
   req.session.authenticated = true;
-  res.redirect('/admin');
+  res.redirect('/admin/');
 });
 
 router.post('/logout', (req, res) => req.session.destroy(() => res.redirect('/admin/login')));

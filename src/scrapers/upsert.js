@@ -38,6 +38,8 @@ export function upsertListEntry(entry) {
   getDb().prepare(`
     INSERT INTO list_entries (book_id, source_id, genre_id, rank, list_name, week_date)
     VALUES (@book_id, @source_id, @genre_id, @rank, @list_name, @week_date)
+    ON CONFLICT(book_id, source_id, list_name, week_date) DO UPDATE SET
+      rank = excluded.rank
   `).run(entry);
 }
 

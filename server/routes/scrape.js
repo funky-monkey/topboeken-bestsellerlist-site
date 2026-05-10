@@ -14,7 +14,7 @@ router.post('/scrape', (req, res) => {
   res.send(layout('Scrapen gestart', `
     <h1>Scrapen gestart</h1>
     <p>De scraper draait op de achtergrond. Bekijk de voortgang in de <a href="/admin/logs">logs</a>.</p>
-    <p style="margin-top:16px"><a href="/admin" class="btn btn-primary">Terug naar dashboard</a></p>
+    <p style="margin-top:16px"><a href="/admin/" class="btn btn-primary">Terug naar dashboard</a></p>
   `));
 });
 

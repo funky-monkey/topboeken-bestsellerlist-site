@@ -4,7 +4,7 @@ import { layout } from '../views/layout.js';
 
 const router = Router();
 
-router.get('/', (req, res) => {
+router.get(['/', ''], (req, res) => {
   const db          = getDb();
   const bookCount   = db.prepare('SELECT COUNT(*) as c FROM books').get().c;
   const sourceCount = db.prepare('SELECT COUNT(*) as c FROM sources WHERE active=1').get().c;

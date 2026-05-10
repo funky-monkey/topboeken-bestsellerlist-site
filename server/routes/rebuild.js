@@ -14,7 +14,7 @@ router.post('/rebuild', (req, res) => {
   res.send(layout('Publicatie gestart', `
     <h1>Publiceren gestart</h1>
     <p>De site wordt opnieuw gebouwd en gepubliceerd. Dit duurt ongeveer 30–60 seconden.</p>
-    <p style="margin-top:16px"><a href="/admin" class="btn btn-primary">Terug naar dashboard</a></p>
+    <p style="margin-top:16px"><a href="/admin/" class="btn btn-primary">Terug naar dashboard</a></p>
   `));
 });
 

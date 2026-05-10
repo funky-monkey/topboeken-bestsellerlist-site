@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS list_entries (
   rank       INTEGER NOT NULL,
   list_name  TEXT    NOT NULL,
   week_date  TEXT    NOT NULL,
-  scraped_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  scraped_at TEXT    NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(book_id, source_id, list_name, week_date)
 );
 
 CREATE TABLE IF NOT EXISTS affiliates (

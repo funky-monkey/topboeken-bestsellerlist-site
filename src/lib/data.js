@@ -32,24 +32,26 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
 
   if (genreSlug) {
     return db.prepare(`
-      SELECT b.*, le.rank, le.list_name, le.week_date
+      SELECT b.*, MIN(le.rank) as rank, le.list_name, le.week_date
       FROM list_entries le
       JOIN books b    ON b.id  = le.book_id
       JOIN sources s  ON s.id  = le.source_id
       JOIN book_genres bg ON bg.book_id = b.id
       JOIN genres g   ON g.id  = bg.genre_id
       WHERE s.slug = ? AND le.week_date = ? AND g.slug = ?
-      ORDER BY le.rank ASC LIMIT 11
+      GROUP BY le.book_id
+      ORDER BY rank ASC LIMIT 11
     `).all(sourceSlug, latest, genreSlug);
   }
 
   return db.prepare(`
-    SELECT b.*, le.rank, le.list_name, le.week_date
+    SELECT b.*, MIN(le.rank) as rank, le.list_name, le.week_date
     FROM list_entries le
     JOIN books b   ON b.id = le.book_id
     JOIN sources s ON s.id = le.source_id
     WHERE s.slug = ? AND le.week_date = ?
-    ORDER BY le.rank ASC LIMIT 11
+    GROUP BY le.book_id
+    ORDER BY rank ASC LIMIT 11
   `).all(sourceSlug, latest);
 }
 
@@ -57,12 +59,13 @@ export function getFullListForSource(sourceSlug, limit = 60) {
   const db = getDb();
   const latest = latestWeek(db, sourceSlug);
   return db.prepare(`
-    SELECT b.*, le.rank, le.list_name
+    SELECT b.*, MIN(le.rank) as rank, le.list_name
     FROM list_entries le
     JOIN books b   ON b.id = le.book_id
     JOIN sources s ON s.id = le.source_id
     WHERE s.slug = ? AND le.week_date = ?
-    ORDER BY le.rank ASC LIMIT ?
+    GROUP BY le.book_id
+    ORDER BY rank ASC LIMIT ?
   `).all(sourceSlug, latest, limit);
 }
 

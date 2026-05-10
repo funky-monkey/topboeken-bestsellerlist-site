@@ -10,7 +10,7 @@ export function layout(title, body) {
 <body>
   <nav class="admin-nav">
     <span class="brand">📚 TopBoeken Admin</span>
-    <a href="/admin">Dashboard</a>
+    <a href="/admin/">Dashboard</a>
     <a href="/admin/books">Boeken</a>
     <a href="/admin/sources">Bronnen</a>
     <a href="/admin/affiliates">Affiliates</a>
