@@ -2,7 +2,12 @@ import { getDb } from '../db/db.js';
 
 function nullify(obj) {
   return Object.fromEntries(
-    Object.entries(obj).map(([k, v]) => [k, v === undefined ? null : v])
+    Object.entries(obj).map(([k, v]) => {
+      if (v === undefined || v === null) return [k, null];
+      if (typeof v === 'number' || typeof v === 'string' || typeof v === 'bigint') return [k, v];
+      if (Buffer.isBuffer(v)) return [k, v];
+      return [k, null]; // reject objects, arrays, booleans, etc.
+    })
   );
 }
 

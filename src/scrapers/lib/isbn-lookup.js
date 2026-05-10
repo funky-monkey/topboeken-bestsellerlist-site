@@ -18,14 +18,19 @@ export async function lookupIsbn(title, author) {
   const isbn13 = doc.isbn?.find(i => i.length === 13) ?? doc.isbn?.[0] ?? null;
   if (!isbn13) return null;
 
+  const rawSentence = doc.first_sentence;
+  const summary = typeof rawSentence === 'string'
+    ? rawSentence
+    : (typeof rawSentence?.value === 'string' ? rawSentence.value : null);
+
   return {
     isbn:      isbn13,
-    title:     doc.title ?? title,
-    author:    doc.author_name?.[0] ?? author,
-    publisher: doc.publisher?.[0] ?? null,
-    pages:     doc.number_of_pages_median ?? null,
-    language:  doc.language?.[0] ?? null,
-    summary:   doc.first_sentence?.value ?? doc.first_sentence ?? null,
+    title:     typeof doc.title === 'string' ? doc.title : title,
+    author:    typeof doc.author_name?.[0] === 'string' ? doc.author_name[0] : author,
+    publisher: typeof doc.publisher?.[0] === 'string' ? doc.publisher[0] : null,
+    pages:     typeof doc.number_of_pages_median === 'number' ? doc.number_of_pages_median : null,
+    language:  typeof doc.language?.[0] === 'string' ? doc.language[0] : null,
+    summary,
     coverUrl:  null,
   };
 }
