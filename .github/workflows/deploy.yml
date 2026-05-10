@@ -24,6 +24,7 @@ jobs:
 
             echo "--- Installing dependencies ---"
             npm ci --omit=dev
+            npm rebuild better-sqlite3
 
             echo "--- Building Astro ---"
             npm run build
