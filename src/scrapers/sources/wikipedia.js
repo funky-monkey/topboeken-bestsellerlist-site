@@ -6,10 +6,19 @@ export async function scrapeWikipedia() {
   const $ = cheerio.load(html);
   const entries = [];
 
-  $('table:first-of-type tbody tr').each((i, row) => {
+  // First table = best-selling individual books by estimated sales
+  $('table').first().find('tbody tr').each((i, row) => {
     const cells = $('td', row).map((_, td) => $(td).text().trim()).get();
-    if (cells.length >= 2 && cells[0] && cells[1]) {
-      entries.push({ rank: i + 1, title: cells[0], author: cells[1], list_name: 'All-Time Bestsellers', source: 'wikipedia', isbn: null, summary: null });
+    if (cells.length >= 2 && cells[0] && cells[1] && cells[0] !== 'Book') {
+      entries.push({
+        rank:      i + 1,
+        title:     cells[0],
+        author:    cells[1],
+        list_name: 'All-Time Bestsellers',
+        source:    'wikipedia',
+        isbn:      null,
+        summary:   null,
+      });
     }
   });
 

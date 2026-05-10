@@ -45,26 +45,32 @@ async function run() {
       console.log(`  → ${entries.length} entries found`);
 
       for (const entry of entries) {
-        const existing = entry.isbn
-          ? db.prepare('SELECT id FROM books WHERE isbn = ?').get(entry.isbn)
-          : null;
+        try {
+          const existing = entry.isbn
+            ? db.prepare('SELECT id FROM books WHERE isbn = ?').get(entry.isbn)
+            : null;
 
-        let bookData;
-        if (existing) {
-          updated++;
-          bookData = existing;
-        } else {
-          bookData = await enrichBook({ title: entry.title, author: entry.author, isbn: entry.isbn ?? null, summary: entry.summary ?? null });
-          if (!bookData) { console.warn(`  Could not resolve ISBN for: ${entry.title}`); continue; }
-          added++;
+          let bookData;
+          if (existing) {
+            updated++;
+            bookData = existing;
+          } else {
+            bookData = await enrichBook({ title: entry.title, author: entry.author, isbn: entry.isbn ?? null, summary: entry.summary ?? null });
+            if (!bookData) { console.warn(`  Could not resolve ISBN for: ${entry.title}`); continue; }
+            added++;
+          }
+
+          const bookId = existing ? existing.id : upsertBook(bookData);
+
+          upsertListEntry({ book_id: bookId, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
+          const title  = bookData.title  ?? entry.title;
+          const author = bookData.author ?? entry.author;
+          const searchQuery = encodeURIComponent(`${title} ${author}`);
+          upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'bol-com',   url: `https://www.bol.com/nl/s/?searchtext=${searchQuery}` });
+          upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'amazon-nl', url: `https://www.amazon.nl/s?k=${searchQuery}` });
+        } catch (bookErr) {
+          console.warn(`  Skipping "${entry.title}": ${bookErr.message}`);
         }
-
-        const bookId = existing ? existing.id : upsertBook(bookData);
-
-        upsertListEntry({ book_id: bookId, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
-        const searchQuery = encodeURIComponent(`${bookData.title ?? entry.title} ${bookData.author ?? entry.author}`);
-        upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'bol-com',   url: `https://www.bol.com/nl/s/?searchtext=${searchQuery}` });
-        upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'amazon-nl', url: `https://www.amazon.nl/s?k=${searchQuery}` });
       }
 
       db.prepare("UPDATE scrape_log SET finished_at=datetime('now'), books_added=?, books_updated=?, status='ok' WHERE id=?").run(added, updated, logId);
