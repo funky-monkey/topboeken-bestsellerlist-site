@@ -1,5 +1,6 @@
 ---
 import '../../styles/source-row.css';
+import '../../styles/list-sublists.css';
 import Base from '../../layouts/Base.astro';
 import BookCard from '../../components/BookCard.astro';
 import { getAllSources, getSourceBySlug, getFullListForSource } from '../../lib/data.js';
@@ -10,8 +11,18 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const source = getSourceBySlug(slug);
-const books  = getFullListForSource(slug);
+const books  = getFullListForSource(slug, 200);
 const flagMap = { NL: '🇳🇱', US: '🇺🇸', INT: '🌐' };
+
+// Group books by sublist name, preserving rank order
+const sublists = books.reduce((acc, book) => {
+  const key = book.list_name ?? source.name;
+  if (!acc[key]) acc[key] = [];
+  acc[key].push(book);
+  return acc;
+}, {});
+
+const hasMultipleSublists = Object.keys(sublists).length > 1;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -31,12 +42,34 @@ const jsonLd = {
   canonical={`/lijsten/${slug}`}
   jsonLd={jsonLd}
 >
-  <div style="margin-bottom:24px">
-    <h1 style="font-size:32px;font-weight:400">
-      De <span class="sans">{source.name}</span> Lijst &nbsp;<span style="font-size:20px">{flagMap[source.country] ?? ''}</span>
+  <div class="list-page-header">
+    <h1 class="list-page-title">
+      De <span class="sans">{source.name}</span> Lijst
+      <span class="list-page-flag">{flagMap[source.country] ?? ''}</span>
     </h1>
+    {hasMultipleSublists && (
+      <p class="list-page-subtitle">{Object.keys(sublists).length} categorieen · {books.length} boeken</p>
+    )}
   </div>
-  <div class="book-grid" style="grid-template-rows:unset">
-    {books.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
-  </div>
+
+  {hasMultipleSublists ? (
+    Object.entries(sublists).map(([listName, listBooks]) => (
+      <div class="sublist-section">
+        <div class="sublist-header">
+          <div class="source-accent" style={`background:${source.accent_color}`}></div>
+          <h2 class="sublist-title">
+            <span class="sans">{listName}</span>
+          </h2>
+          <span class="sublist-count">{listBooks.length} titels</span>
+        </div>
+        <div class="book-grid sublist-grid">
+          {listBooks.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
+        </div>
+      </div>
+    ))
+  ) : (
+    <div class="book-grid sublist-grid">
+      {books.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
+    </div>
+  )}
 </Base>
