@@ -1,6 +1,13 @@
 import { getDb } from '../db/db.js';
 
+function nullify(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k, v === undefined ? null : v])
+  );
+}
+
 export function upsertBook(book) {
+  book = nullify(book);
   const db = getDb();
   db.prepare(`
     INSERT INTO books (isbn, title, author, publisher, pages, language,
