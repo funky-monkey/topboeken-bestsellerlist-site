@@ -1,0 +1,65 @@
+---
+import Base from '../../layouts/Base.astro';
+import DetailHero from '../../components/DetailHero.astro';
+import ListBadges from '../../components/ListBadges.astro';
+import { getAllBookSlugs, getBookBySlug, getListsForBook, getAffiliatesForBook, getGenresForBook } from '../../lib/data.js';
+
+export async function getStaticPaths() {
+  return getAllBookSlugs().map(slug => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const book       = getBookBySlug(slug);
+const lists      = getListsForBook(book.id);
+const affiliates = getAffiliatesForBook(book.id);
+const genres     = getGenresForBook(book.id);
+
+const siteUrl    = 'https://top-boeken.nl';
+const coverUrl   = book.cover_path ? `${siteUrl}/${book.cover_path}` : null;
+const n          = lists.length;
+const excerpt    = book.summary ? book.summary.slice(0, 150) + '…' : '';
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name:          book.title,
+    author:        { '@type': 'Person', name: book.author },
+    isbn:          book.isbn,
+    numberOfPages: book.pages,
+    publisher:     book.publisher,
+    inLanguage:    book.language,
+    image:         coverUrl,
+    ...(book.goodreads_rating && {
+      aggregateRating: {
+        '@type':      'AggregateRating',
+        ratingValue:  book.goodreads_rating,
+        reviewCount:  book.goodreads_count,
+      },
+    }),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      ...(genres[0] ? [{ '@type': 'ListItem', position: 2, name: genres[0].name_nl, item: `${siteUrl}/genre/${genres[0].slug}` }] : []),
+      { '@type': 'ListItem', position: genres[0] ? 3 : 2, name: book.title },
+    ],
+  },
+];
+---
+<Base
+  title={`${book.title} – ${book.author}`}
+  description={`${book.title} staat op ${n} bestsellerlijst${n !== 1 ? 'en' : ''}. ${excerpt}`}
+  canonical={`/boeken/${slug}`}
+  ogImage={book.cover_path ? `/${book.cover_path}` : undefined}
+  ogType="book"
+  jsonLd={jsonLd}
+  preloadImage={book.cover_path ? `/${book.cover_path}` : undefined}
+>
+  <div style="background:#fff;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <DetailHero book={book} lists={lists} affiliates={affiliates} genres={genres} />
+    <ListBadges lists={lists} />
+  </div>
+</Base>

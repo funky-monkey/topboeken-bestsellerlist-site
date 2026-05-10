@@ -1,0 +1,22 @@
+---
+import '../styles/source-row.css';
+import BookGrid from './BookGrid.astro';
+
+const { source, books } = Astro.props;
+const flagMap = { NL: '🇳🇱 NL', US: '🇺🇸 US', INT: '🌐 INT' };
+const flag = flagMap[source.country] ?? source.country;
+---
+<section class="source-section" data-source={source.slug}>
+  <div class="source-header">
+    <div class="source-heading">
+      <div class="source-accent" style={`background:${source.accent_color}`}></div>
+      De <span class="sans">{source.name}</span>
+      <span class="source-flag">{flag}</span>
+    </div>
+    <a href={`/lijsten/${source.slug}`} class="source-more">Bekijk alle →</a>
+  </div>
+  {books.length > 0
+    ? <BookGrid books={books} accentColor={source.accent_color} sourceSlug={source.slug} />
+    : <p class="source-empty">Nog geen boeken beschikbaar voor deze bron.</p>
+  }
+</section>

@@ -1,0 +1,22 @@
+---
+import '../styles/book-card.css';
+import { starsFromRating } from '../lib/stars.js';
+
+const { book, accentColor = '#3b82f6' } = Astro.props;
+const coverSrc = book.cover_path ? `/${book.cover_path}` : null;
+const stars = starsFromRating(book.goodreads_rating);
+---
+<a href={`/boeken/${book.slug}`} class="book-card book-card-big">
+  {coverSrc
+    ? <img src={coverSrc} alt={`Boekomslag van ${book.title} door ${book.author}`} width="400" height="572" loading="eager" fetchpriority="high" />
+    : <div class="book-card-placeholder"></div>
+  }
+  <span class="rank-badge" style={`background:${accentColor};font-size:13px;padding:4px 10px`}>#1</span>
+  <div class="book-hover">
+    <div class="book-hover-panel">
+      <div class="hover-title">{book.title}</div>
+      <div class="hover-author">{book.author}</div>
+      {stars && <div class="hover-stars">{stars}</div>}
+    </div>
+  </div>
+</a>

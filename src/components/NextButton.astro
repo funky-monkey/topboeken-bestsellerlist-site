@@ -1,0 +1,8 @@
+---
+import '../styles/book-card.css';
+const { href } = Astro.props;
+---
+<a href={href} class="book-next">
+  <span class="book-next-icon">›</span>
+  <span class="book-next-label">Meer<br>bekijken</span>
+</a>

@@ -1,0 +1,26 @@
+---
+import '../styles/detail.css';
+
+const { affiliates } = Astro.props;
+
+const STYLES = {
+  'bol-com':   { bg: '#0000a4', color: '#fff', icon: '📦', label: 'bol.com' },
+  'amazon-nl': { bg: '#ff9900', color: '#111', icon: '🛒', label: 'Amazon NL' },
+};
+---
+<div class="buy-buttons">
+  {affiliates.map(a => {
+    const s = STYLES[a.slug] ?? { bg: '#333', color: '#fff', icon: '🔗', label: a.name };
+    return (
+      <a
+        href={a.url}
+        rel="nofollow sponsored"
+        target="_blank"
+        class="btn-buy"
+        style={`background:${s.bg};color:${s.color}`}
+      >
+        {s.icon}&nbsp;Kopen op {s.label}{a.price ? ` — €${a.price.toFixed(2)}` : ''}
+      </a>
+    );
+  })}
+</div>

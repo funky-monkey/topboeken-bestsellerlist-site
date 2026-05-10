@@ -1,0 +1,17 @@
+---
+import '../styles/detail.css';
+const { lists } = Astro.props;
+---
+<div class="lists-on">
+  <h2 class="lists-on-heading">
+    Staat op deze <span class="sans">lijsten</span>
+  </h2>
+  <div class="list-tags">
+    {lists.map(l => (
+      <a href={`/lijsten/${l.slug}`} class="list-tag">
+        <span class="list-tag-dot" style={`background:${l.accent_color}`}></span>
+        {l.name}&nbsp;·&nbsp;<strong>#{l.rank}</strong>
+      </a>
+    ))}
+  </div>
+</div>

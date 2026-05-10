@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/search.css';
+import '../styles/book-card.css';
+import { getAllBooksForSearch } from '../lib/data.js';
+
+const books = getAllBooksForSearch();
+---
+<Base
+  title="Zoeken"
+  description="Zoek in alle Nederlandse en internationale bestsellers op TopBoeken."
+  canonical="/zoeken"
+>
+  <h1 class="search-heading">Zoek in <span class="sans">alle boeken</span></h1>
+  <input id="search-input" type="text" class="search-input" placeholder="Boektitel of auteur…" autofocus />
+  <div id="search-results" class="search-grid"></div>
+
+  <script id="book-data" type="application/json" set:html={JSON.stringify(books)} />
+  <script src="/scripts/search.js" is:inline></script>
+</Base>

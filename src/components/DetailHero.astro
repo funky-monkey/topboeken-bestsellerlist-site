@@ -1,0 +1,59 @@
+---
+import '../styles/detail.css';
+import BuyButtons from './BuyButtons.astro';
+import { starsFromRating } from '../lib/stars.js';
+
+const { book, lists, affiliates, genres } = Astro.props;
+const coverSrc = book.cover_path ? `/${book.cover_path}` : null;
+const stars = starsFromRating(book.goodreads_rating);
+const [firstWord, ...restWords] = book.title.split(' ');
+---
+<div class="detail-hero">
+  <div class="detail-cover-col">
+    <div class="detail-cover-img">
+      {coverSrc
+        ? <img src={coverSrc} alt={`Boekomslag van ${book.title} door ${book.author}`} width="460" height="657" loading="eager" fetchpriority="high" />
+        : <div class="detail-cover-placeholder"></div>
+      }
+      <div class="detail-cover-spine"></div>
+    </div>
+  </div>
+
+  <div class="detail-info-col">
+    <div class="detail-tags">
+      {lists.slice(0, 3).map(l => (
+        <a href={`/lijsten/${l.slug}`} class="detail-tag" style={`background:${l.accent_color}18;color:${l.accent_color}`}>
+          <span class="detail-tag-dot" style={`background:${l.accent_color}`}></span>
+          {l.name} #{l.rank}
+        </a>
+      ))}
+    </div>
+
+    <h1 class="detail-title">
+      <span class="sans">{firstWord}</span>{restWords.length > 0 ? ' ' + restWords.join(' ') : ''}
+    </h1>
+
+    <p class="detail-author">door <strong>{book.author}</strong></p>
+
+    {stars && (
+      <div class="detail-rating">
+        <span class="detail-stars">{stars}</span>
+        <span class="detail-rating-text">
+          {book.goodreads_rating?.toFixed(1)} · {book.goodreads_count?.toLocaleString('nl-NL')} beoordelingen
+        </span>
+      </div>
+    )}
+
+    <div class="detail-meta">
+      {genres[0] && <div class="meta-item"><div class="meta-label">Genre</div><div class="meta-value">{genres[0].name_nl}</div></div>}
+      {book.publisher && <div class="meta-item"><div class="meta-label">Uitgever</div><div class="meta-value">{book.publisher}</div></div>}
+      {book.pages && <div class="meta-item"><div class="meta-label">Pagina's</div><div class="meta-value">{book.pages}</div></div>}
+      <div class="meta-item"><div class="meta-label">ISBN</div><div class="meta-value">{book.isbn}</div></div>
+      {book.language && <div class="meta-item"><div class="meta-label">Taal</div><div class="meta-value">{book.language === 'nl' ? 'Nederlands' : 'Engels'}</div></div>}
+    </div>
+
+    {book.summary && <p class="detail-summary">{book.summary}</p>}
+
+    <BuyButtons affiliates={affiliates} />
+  </div>
+</div>

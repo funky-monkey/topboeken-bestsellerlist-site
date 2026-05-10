@@ -1,0 +1,42 @@
+---
+import '../../styles/source-row.css';
+import Base from '../../layouts/Base.astro';
+import BookCard from '../../components/BookCard.astro';
+import { getAllSources, getSourceBySlug, getFullListForSource } from '../../lib/data.js';
+
+export async function getStaticPaths() {
+  return getAllSources().map(s => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const source = getSourceBySlug(slug);
+const books  = getFullListForSource(slug);
+const flagMap = { NL: '🇳🇱', US: '🇺🇸', INT: '🌐' };
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: `${source.name} Bestsellers`,
+  url: `https://top-boeken.nl/lijsten/${slug}`,
+  itemListElement: books.map((b, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: `https://top-boeken.nl/boeken/${b.slug}`,
+  })),
+};
+---
+<Base
+  title={`${source.name} Bestsellers — Volledige lijst`}
+  description={`De volledige bestsellerlijst van ${source.name}. Alle titels op één pagina.`}
+  canonical={`/lijsten/${slug}`}
+  jsonLd={jsonLd}
+>
+  <div style="margin-bottom:24px">
+    <h1 style="font-size:32px;font-weight:400">
+      De <span class="sans">{source.name}</span> Lijst &nbsp;<span style="font-size:20px">{flagMap[source.country] ?? ''}</span>
+    </h1>
+  </div>
+  <div class="book-grid" style="grid-template-rows:unset">
+    {books.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
+  </div>
+</Base>

@@ -1,0 +1,17 @@
+---
+import '../styles/nav.css';
+---
+<nav class="nav">
+  <a href="/" class="nav-logo">
+    De <span class="sans">TopBoeken</span> Lijst
+  </a>
+  <div class="nav-right">
+    <form action="/zoeken" method="get">
+      <input class="nav-search" name="q" placeholder="🔍  Zoek een boek of auteur…" autocomplete="off" />
+    </form>
+    <div class="nav-links">
+      <a href="/genre/fictie">Categorieën</a>
+      <a href="/lijsten/ny-times">Lijsten</a>
+    </div>
+  </div>
+</nav>

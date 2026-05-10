@@ -1,0 +1,15 @@
+---
+import '../styles/pills.css';
+import { getAllGenres } from '../lib/data.js';
+
+const { activeSlug = null } = Astro.props;
+const genres = getAllGenres();
+---
+<div class="pills-row">
+  <a href="/" class={`pill ${activeSlug === null ? 'pill-active' : 'pill-inactive'}`}>Alle genres</a>
+  {genres.map(g => (
+    <a href={`/genre/${g.slug}`} class={`pill ${activeSlug === g.slug ? 'pill-active' : 'pill-inactive'}`}>
+      {g.name_nl}
+    </a>
+  ))}
+</div>

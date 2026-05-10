@@ -1,0 +1,28 @@
+.search-heading {
+  font-size: 28px;
+  font-weight: 400;
+  margin-bottom: 24px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 480px;
+  padding: 12px 20px;
+  font-size: 16px;
+  border: 1.5px solid #ddd;
+  border-radius: 0;
+  margin-bottom: 32px;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  outline: none;
+  display: block;
+}
+
+.search-input:focus {
+  border-color: #888;
+}
+
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+}

@@ -1,0 +1,14 @@
+---
+import '../styles/source-row.css';
+import BookCardBig from './BookCardBig.astro';
+import BookCard from './BookCard.astro';
+import NextButton from './NextButton.astro';
+
+const { books, accentColor, sourceSlug } = Astro.props;
+const [first, ...rest] = books;
+---
+<div class="book-grid">
+  {first && <BookCardBig book={first} accentColor={accentColor} />}
+  {rest.map(b => <BookCard book={b} accentColor={accentColor} />)}
+  <NextButton href={`/lijsten/${sourceSlug}`} />
+</div>

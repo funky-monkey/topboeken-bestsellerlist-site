@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import GenrePills from '../../components/GenrePills.astro';
+import SourceRow from '../../components/SourceRow.astro';
+import { getAllGenres, getAllSources, getTopBooksForSource, getGenreBySlug } from '../../lib/data.js';
+
+export async function getStaticPaths() {
+  return getAllGenres().map(g => ({ params: { slug: g.slug } }));
+}
+
+const { slug } = Astro.params;
+const genre = getGenreBySlug(slug);
+const sources = getAllSources();
+const sourceData = sources
+  .map(s => ({ source: s, books: getTopBooksForSource(s.slug, slug) }))
+  .filter(sd => sd.books.length > 0);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${genre.name_nl} Bestsellers | TopBoeken`,
+  url: `https://top-boeken.nl/genre/${slug}`,
+};
+---
+<Base
+  title={`${genre.name_nl} Bestsellers`}
+  description={`De beste ${genre.name_nl} boeken van alle grote bestsellerlijsten. Bekijk de top titels van NY Times, Besteller 60 en meer.`}
+  canonical={`/genre/${slug}`}
+  jsonLd={jsonLd}
+>
+  <GenrePills activeSlug={slug} />
+  {sourceData.length > 0
+    ? sourceData.map(({ source, books }) => <SourceRow source={source} books={books} />)
+    : <p style="color:#aaa;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">Geen boeken gevonden in deze categorie.</p>
+  }
+</Base>

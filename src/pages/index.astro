@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import GenrePills from '../components/GenrePills.astro';
+import SourceRow from '../components/SourceRow.astro';
+import { getAllSources, getTopBooksForSource } from '../lib/data.js';
+
+const sources = getAllSources();
+const sourceData = sources.map(s => ({ source: s, books: getTopBooksForSource(s.slug) }));
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    url: 'https://top-boeken.nl',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://top-boeken.nl/zoeken?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  { '@context': 'https://schema.org', '@type': 'Organization', name: 'TopBoeken', url: 'https://top-boeken.nl' },
+];
+---
+<Base
+  title="De TopBoeken Lijst — Nederlandse bestsellers"
+  description="Alle Nederlandse en internationale bestsellerlijsten op één plek. Bekijk de top boeken van NY Times, Besteller 60, bol.com en meer."
+  canonical="/"
+  jsonLd={jsonLd}
+>
+  <GenrePills />
+  {sourceData.map(({ source, books }) => <SourceRow source={source} books={books} />)}
+</Base>

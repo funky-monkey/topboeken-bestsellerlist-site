@@ -1,0 +1,23 @@
+---
+const { title, description, canonical, ogImage, ogType = 'website', jsonLd, preloadImage } = Astro.props;
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://top-boeken.nl';
+const fullCanonical = canonical ? `${siteUrl}${canonical}` : siteUrl;
+const fullImage = ogImage ? `${siteUrl}${ogImage}` : null;
+---
+<title>{title} | TopBoeken</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={fullCanonical} />
+
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={ogType} />
+<meta property="og:locale" content="nl_NL" />
+<meta property="og:site_name" content="TopBoeken" />
+{fullImage && <meta property="og:image" content={fullImage} />}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+{fullImage && <meta name="twitter:image" content={fullImage} />}
+
+{preloadImage && <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />}
+{jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
