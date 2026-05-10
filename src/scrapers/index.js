@@ -55,7 +55,7 @@ async function run() {
             updated++;
             bookData = existing;
           } else {
-            bookData = await enrichBook({ title: entry.title, author: entry.author, isbn: entry.isbn ?? null, summary: entry.summary ?? null });
+            bookData = await enrichBook({ title: entry.title, author: entry.author, isbn: entry.isbn ?? null, summary: entry.summary ?? null, coverImageUrl: entry.coverImageUrl ?? null });
             if (!bookData) { console.warn(`  Could not resolve ISBN for: ${entry.title}`); continue; }
             added++;
           }

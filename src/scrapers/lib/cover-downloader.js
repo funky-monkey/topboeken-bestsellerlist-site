@@ -22,6 +22,19 @@ async function tryDownload(url, dest) {
 }
 
 /**
+ * Download a cover from any direct URL (e.g. NYT CDN).
+ * Cache-first: skips download if file already exists.
+ */
+export async function downloadCoverFromUrl(isbn, url) {
+  const dest = join(COVERS_DIR, `${isbn}.jpg`);
+  if (existsSync(dest)) return `covers/${isbn}.jpg`;
+  if (!existsSync(COVERS_DIR)) mkdirSync(COVERS_DIR, { recursive: true });
+  await limiter.wait();
+  const ok = await tryDownload(url, dest);
+  return ok ? `covers/${isbn}.jpg` : null;
+}
+
+/**
  * Download cover image for a book.
  * Tries Open Library cover ID first (more reliable), falls back to ISBN lookup.
  * Returns relative path on success, null if no cover found.
