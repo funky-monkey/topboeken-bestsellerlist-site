@@ -39,8 +39,8 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
       JOIN book_genres bg ON bg.book_id = b.id
       JOIN genres g   ON g.id  = bg.genre_id
       WHERE s.slug = ? AND le.week_date = ? AND g.slug = ?
-      GROUP BY le.book_id
-      ORDER BY rank ASC LIMIT 11
+      GROUP BY UPPER(TRIM(b.title))
+      ORDER BY rank ASC LIMIT 10
     `).all(sourceSlug, latest, genreSlug);
   }
 
@@ -50,8 +50,8 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
     JOIN books b   ON b.id = le.book_id
     JOIN sources s ON s.id = le.source_id
     WHERE s.slug = ? AND le.week_date = ?
-    GROUP BY le.book_id
-    ORDER BY rank ASC LIMIT 11
+    GROUP BY UPPER(TRIM(b.title))
+    ORDER BY rank ASC LIMIT 10
   `).all(sourceSlug, latest);
 }
 
