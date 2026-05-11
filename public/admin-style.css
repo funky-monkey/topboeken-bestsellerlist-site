@@ -58,3 +58,52 @@ label { display: block; font-weight: 600; font-size: 12px; margin-bottom: 4px; c
 .stat-label  { color: #888; font-size: 13px; margin-top: 4px; }
 
 .action-row { display: flex; gap: 12px; margin-bottom: 32px; }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-decoration: none;
+  background: #fff;
+  color: #232323;
+  border: 1.5px solid #ddd;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.page-btn:hover { background: #f5f4f1; border-color: #999; }
+
+.page-btn-active {
+  background: #232323;
+  color: #fff;
+  border-color: #232323;
+}
+
+.page-btn-active:hover { background: #232323; }
+
+.page-btn-disabled {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  background: #f5f4f1;
+  color: #bbb;
+  border: 1.5px solid #eee;
+  cursor: default;
+}
+
+.page-ellipsis {
+  padding: 6px 4px;
+  color: #888;
+  font-size: 13px;
+}

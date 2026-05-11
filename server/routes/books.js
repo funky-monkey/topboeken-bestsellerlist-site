@@ -18,34 +18,77 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+const PER_PAGE = 25;
 const router = Router();
 
 router.get('/books', (req, res) => {
-  const q     = req.query.q ?? '';
-  const db    = getDb();
-  const books = q
-    ? db.prepare('SELECT * FROM books WHERE title LIKE ? OR author LIKE ? ORDER BY updated_at DESC LIMIT 100').all(`%${q}%`, `%${q}%`)
-    : db.prepare('SELECT * FROM books ORDER BY updated_at DESC LIMIT 100').all();
+  const q    = req.query.q ?? '';
+  const page = Math.max(1, parseInt(req.query.page ?? '1', 10));
+  const offset = (page - 1) * PER_PAGE;
+  const db   = getDb();
+
+  const where = q ? 'WHERE title LIKE ? OR author LIKE ?' : '';
+  const args  = q ? [`%${q}%`, `%${q}%`] : [];
+
+  const total = db.prepare(`SELECT COUNT(*) as c FROM books ${where}`).get(...args).c;
+  const books = db.prepare(`SELECT * FROM books ${where} ORDER BY title ASC LIMIT ? OFFSET ?`).all(...args, PER_PAGE, offset);
+  const totalPages = Math.ceil(total / PER_PAGE);
 
   const rows = books.map(b => `
     <tr>
-      <td>${b.cover_path ? `<img src="/${b.cover_path}" width="32" height="46" style="object-fit:cover;vertical-align:middle" onerror="this.style.display='none'">` : ''} &nbsp;${b.title}</td>
+      <td>${b.cover_path ? `<img src="/${b.cover_path}" width="32" height="46" style="object-fit:cover;vertical-align:middle" onerror="this.style.display='none'">` : ''}&nbsp;${b.title}</td>
       <td>${b.author}</td>
-      <td>${b.isbn}</td>
-      <td>${b.updated_at?.slice(0, 10) ?? ''}</td>
+      <td style="font-size:12px;color:#888">${b.isbn}</td>
+      <td style="font-size:12px;color:#888">${b.updated_at?.slice(0, 10) ?? ''}</td>
       <td><a href="/admin/books/${b.id}" class="btn btn-primary" style="padding:4px 10px;font-size:12px">Bewerk</a></td>
     </tr>`).join('');
 
+  function pageUrl(p) {
+    const params = new URLSearchParams({ ...(q ? { q } : {}), page: p });
+    return `/admin/books?${params}`;
+  }
+
+  function pageBtn(p, label, disabled = false, active = false) {
+    if (disabled) return `<span class="page-btn page-btn-disabled">${label}</span>`;
+    return `<a href="${pageUrl(p)}" class="page-btn${active ? ' page-btn-active' : ''}">${label}</a>`;
+  }
+
+  // Build page number buttons — show at most 7 around current page
+  const pageNums = [];
+  const delta = 3;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || (p >= page - delta && p <= page + delta)) {
+      pageNums.push(p);
+    }
+  }
+  // Insert ellipsis markers
+  const pageBtns = [];
+  let prev = 0;
+  for (const p of pageNums) {
+    if (prev && p - prev > 1) pageBtns.push(`<span class="page-ellipsis">…</span>`);
+    pageBtns.push(pageBtn(p, p, false, p === page));
+    prev = p;
+  }
+
+  const pagination = totalPages > 1 ? `
+    <div class="pagination">
+      ${pageBtn(page - 1, '← Vorige', page === 1)}
+      ${pageBtns.join('')}
+      ${pageBtn(page + 1, 'Volgende →', page === totalPages)}
+    </div>` : '';
+
   res.send(layout('Boeken', `
     <h1>Boeken</h1>
-    <form method="get" style="margin-bottom:20px;display:flex;gap:8px">
+    <form method="get" style="margin-bottom:20px;display:flex;gap:8px;align-items:center">
       <input name="q" value="${q}" placeholder="Zoek op titel of auteur…" style="width:320px;margin-bottom:0">
       <button class="btn btn-primary" type="submit">Zoeken</button>
+      <span style="color:#888;font-size:13px;margin-left:8px">${total} boeken${q ? ` voor "${q}"` : ''}</span>
     </form>
     <table>
       <thead><tr><th>Titel</th><th>Auteur</th><th>ISBN</th><th>Bijgewerkt</th><th></th></tr></thead>
       <tbody>${rows || '<tr><td colspan="5" style="color:#aaa">Geen boeken gevonden</td></tr>'}</tbody>
     </table>
+    ${pagination}
   `));
 });
 
