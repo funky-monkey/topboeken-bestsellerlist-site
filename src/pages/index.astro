@@ -5,7 +5,9 @@ import SourceRow from '../components/SourceRow.astro';
 import { getAllSources, getTopBooksForSource } from '../lib/data.js';
 
 const sources = getAllSources();
-const sourceData = sources.map(s => ({ source: s, books: getTopBooksForSource(s.slug) }));
+const sourceData = sources
+  .map(s => ({ source: s, books: getTopBooksForSource(s.slug) }))
+  .filter(sd => sd.books.length > 0);
 
 const jsonLd = [
   {
