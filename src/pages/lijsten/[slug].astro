@@ -3,6 +3,7 @@ import '../../styles/source-row.css';
 import '../../styles/list-sublists.css';
 import Base from '../../layouts/Base.astro';
 import BookCard from '../../components/BookCard.astro';
+import BookCardBig from '../../components/BookCardBig.astro';
 import { getAllSources, getSourceBySlug, getFullListForSource } from '../../lib/data.js';
 
 export async function getStaticPaths() {
@@ -48,28 +49,38 @@ const jsonLd = {
       <span class="list-page-flag">{flagMap[source.country] ?? ''}</span>
     </h1>
     {hasMultipleSublists && (
-      <p class="list-page-subtitle">{Object.keys(sublists).length} categorieen · {books.length} boeken</p>
+      <p class="list-page-subtitle">{Object.keys(sublists).length} categorieën · {books.length} boeken</p>
     )}
   </div>
 
   {hasMultipleSublists ? (
-    Object.entries(sublists).map(([listName, listBooks]) => (
-      <div class="sublist-section">
-        <div class="sublist-header">
-          <div class="source-accent" style={`background:${source.accent_color}`}></div>
-          <h2 class="sublist-title">
-            <span class="sans">{listName}</span>
-          </h2>
-          <span class="sublist-count">{listBooks.length} titels</span>
+    Object.entries(sublists).map(([listName, listBooks]) => {
+      const [first, ...rest] = listBooks;
+      return (
+        <div class="sublist-section">
+          <div class="sublist-header">
+            <div class="source-accent" style={`background:${source.accent_color}`}></div>
+            <h2 class="sublist-title">
+              <span class="sans">{listName}</span>
+            </h2>
+            <span class="sublist-count">{listBooks.length} titels</span>
+          </div>
+          <div class="book-grid sublist-grid">
+            {first && <BookCardBig book={first} accentColor={source.accent_color} />}
+            {rest.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
+          </div>
         </div>
-        <div class="book-grid sublist-grid">
-          {listBooks.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
-        </div>
-      </div>
-    ))
+      );
+    })
   ) : (
-    <div class="book-grid sublist-grid">
-      {books.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
-    </div>
+    (() => {
+      const [first, ...rest] = books;
+      return (
+        <div class="book-grid sublist-grid">
+          {first && <BookCardBig book={first} accentColor={source.accent_color} />}
+          {rest.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
+        </div>
+      );
+    })()
   )}
 </Base>
