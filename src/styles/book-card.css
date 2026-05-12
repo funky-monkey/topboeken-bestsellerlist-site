@@ -91,10 +91,17 @@
   border-radius: 0;
 }
 
-/* Big #1 card */
+/* Big #1 card — homepage: fills 2fr column spanning 2 rows */
 .book-card-big {
   grid-row: 1 / 3;
   grid-column: 1 / 2;
+  aspect-ratio: unset;
+}
+
+/* Big #1 card on list pages — uniform grid, spans 2 columns × 2 rows */
+.book-grid-list .book-card-big {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
   aspect-ratio: unset;
 }
 

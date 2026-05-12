@@ -65,7 +65,7 @@ const jsonLd = {
             </h2>
             <span class="sublist-count">{listBooks.length} titels</span>
           </div>
-          <div class="book-grid sublist-grid">
+          <div class="book-grid-list">
             {first && <BookCardBig book={first} accentColor={source.accent_color} />}
             {rest.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
           </div>

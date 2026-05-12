@@ -52,9 +52,17 @@
   color: var(--text);
 }
 
+/* Homepage grid — 2fr first column, fixed 2 rows via BookCardBig + next button */
 .book-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 3px;
+}
+
+/* List page grid — uniform 6 columns, big card spans 2 cols × 2 rows, rows 3+ are all equal */
+.book-grid-list {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 3px;
 }
 
