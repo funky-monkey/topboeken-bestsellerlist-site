@@ -30,17 +30,21 @@ router.get('/books', (req, res) => {
   const where = q ? 'WHERE title LIKE ? OR author LIKE ?' : '';
   const args  = q ? [`%${q}%`, `%${q}%`] : [];
 
-  const total = db.prepare(`SELECT COUNT(*) as c FROM books ${where}`).get(...args).c;
-  const books = db.prepare(`SELECT * FROM books ${where} ORDER BY title ASC LIMIT ? OFFSET ?`).all(...args, PER_PAGE, offset);
+  const siteUrl    = process.env.SITE_URL ?? 'https://top-boeken.nl';
+  const total      = db.prepare(`SELECT COUNT(*) as c FROM books ${where}`).get(...args).c;
+  const books      = db.prepare(`SELECT * FROM books ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`).all(...args, PER_PAGE, offset);
   const totalPages = Math.ceil(total / PER_PAGE);
 
   const rows = books.map(b => `
     <tr>
-      <td>${b.cover_path ? `<img src="/${b.cover_path}" width="32" height="46" style="object-fit:cover;vertical-align:middle" onerror="this.style.display='none'">` : ''}&nbsp;${b.title}</td>
+      <td>${b.cover_path ? `<img src="/${b.cover_path}" width="32" height="46" style="object-fit:contain;vertical-align:middle;background:#f5f4f1" onerror="this.style.display='none'">` : ''}&nbsp;${b.title}</td>
       <td>${b.author}</td>
       <td style="font-size:12px;color:#888">${b.isbn}</td>
       <td style="font-size:12px;color:#888">${b.updated_at?.slice(0, 10) ?? ''}</td>
-      <td><a href="/admin/books/${b.id}" class="btn btn-primary" style="padding:4px 10px;font-size:12px">Bewerk</a></td>
+      <td style="white-space:nowrap">
+        <a href="/admin/books/${b.id}" class="btn btn-primary" style="padding:4px 10px;font-size:12px">Bewerk</a>
+        &nbsp;<a href="${siteUrl}/boeken/${b.slug}" target="_blank" class="btn" style="padding:4px 10px;font-size:12px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">👁</a>
+      </td>
     </tr>`).join('');
 
   function pageUrl(p) {
