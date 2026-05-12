@@ -110,9 +110,9 @@ router.get('/books/:id', (req, res) => {
   const flash = req.query.saved
     ? `<div class="flash flash-ok">Wijzigingen opgeslagen. <a href="${siteUrl}/boeken/${book.slug}" target="_blank" style="font-weight:700;color:#166534;text-decoration:underline">Bekijk op site →</a></div>`
     : '';
-  const coverPreview = book.cover_path
-    ? `<img src="/${book.cover_path}" style="height:120px;object-fit:cover;display:block;margin-bottom:8px">`
-    : '<p style="color:#aaa;font-size:13px;margin-bottom:8px">Geen cover</p>';
+  const currentCover = book.cover_path
+    ? `<img id="cover-preview" src="/${book.cover_path}" style="height:160px;object-fit:contain;display:block;margin-bottom:8px;background:#f5f4f1;padding:4px">`
+    : `<div id="cover-preview" style="height:160px;width:112px;background:#f5f4f1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#aaa;margin-bottom:8px">Geen cover</div>`;
 
   res.send(layout(`Bewerk — ${book.title}`, `
     <h1>Boek bewerken</h1>
@@ -122,9 +122,18 @@ router.get('/books/:id', (req, res) => {
       <label>Auteur</label><input type="text" name="author" value="${book.author}">
       <label>Samenvatting</label><textarea name="summary" rows="5">${book.summary ?? ''}</textarea>
       <label>Cover</label>
-      ${coverPreview}
-      <input type="file" name="cover" accept="image/*" style="margin-bottom:12px">
+      ${currentCover}
+      <input type="file" name="cover" accept="image/*" style="margin-bottom:8px" id="cover-input">
       <p style="font-size:12px;color:#888;margin-bottom:12px">Upload een nieuw omslagfoto (JPG/PNG, max 5MB). Laat leeg om de huidige te behouden.</p>
+      <script>
+        document.getElementById('cover-input').addEventListener('change', function() {
+          const file = this.files[0];
+          if (!file) return;
+          const preview = document.getElementById('cover-preview');
+          const url = URL.createObjectURL(file);
+          preview.outerHTML = '<img id="cover-preview" src="' + url + '" style="height:160px;object-fit:contain;display:block;margin-bottom:8px;background:#f5f4f1;padding:4px">';
+        });
+      </script>
       <label style="margin-bottom:8px">Genres</label>
       <div style="margin-bottom:16px">${checkboxes}</div>
       <div style="display:flex;gap:10px;align-items:center">
