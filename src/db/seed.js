@@ -36,7 +36,8 @@ export function seedSources() {
     ['Goodreads',         'goodreads',          'US',  '#f97316', 'https://www.goodreads.com/shelf/show/current-bestsellers',  JSON.stringify({ method: 'cheerio' })],
     ['Publishers Weekly', 'publishers-weekly',  'US',  '#8b5cf6', 'https://www.publishersweekly.com',                         JSON.stringify({ method: 'rss' })],
     ['Wikipedia',         'wikipedia',          'INT', '#64748b', 'https://en.wikipedia.org/wiki/List_of_best-selling_books',  JSON.stringify({ method: 'api' })],
-    ['Barnes & Noble',    'barnes-noble',       'US',  '#dc2626', 'https://www.barnesandnoble.com',                            JSON.stringify({ method: 'cheerio' })],
+    // Barnes & Noble disabled — Cloudflare blocks non-browser scraping; mirrors NY Times
+    // ['Barnes & Noble', 'barnes-noble', 'US', '#dc2626', 'https://www.barnesandnoble.com', JSON.stringify({ method: 'cheerio' })],
   ];
   db.transaction((rows) => rows.forEach(r => insert.run(...r)))(sources);
 }
