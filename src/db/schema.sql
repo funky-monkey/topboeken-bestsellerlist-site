@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS books (
   pages            INTEGER,
   language         TEXT,
   summary          TEXT,
+  summary_nl       TEXT,
   cover_path       TEXT,
   goodreads_rating REAL,
   goodreads_count  INTEGER,

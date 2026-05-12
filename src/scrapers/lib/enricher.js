@@ -2,6 +2,7 @@ import { lookupIsbn } from './isbn-lookup.js';
 import { downloadCover, downloadCoverFromUrl } from './cover-downloader.js';
 import { getWikipediaDescription } from './wikipedia-enrich.js';
 import { mapSubjectsToGenres } from './genre-mapper.js';
+import { translateToNl } from './translator.js';
 import { bookSlug } from '../../lib/slugify.js';
 
 export async function enrichBook({
@@ -17,7 +18,8 @@ export async function enrichBook({
     meta = {
       isbn: knownIsbn, title, author,
       publisher: null, pages: null, language: null,
-      summary: knownSummary, coverUrl: null, coverId: null, subjects: [],
+      summary: knownSummary, summary_nl: null,
+      coverUrl: null, coverId: null, subjects: [],
     };
   } else {
     meta = await lookupIsbn(title, author);
@@ -33,13 +35,20 @@ export async function enrichBook({
     cover_path = await downloadCover(meta.isbn, meta.coverId ?? null);
   }
 
-  // Summary: Open Library first_sentence → Wikipedia extract → null
+  // English description: Google Books → Wikipedia fallback
   let summary = meta.summary ?? knownSummary ?? null;
   if (!summary) {
     summary = await getWikipediaDescription(meta.title, meta.author);
   }
 
-  // Genres: map Open Library subjects to our taxonomy
+  // Dutch description:
+  // 1. Google Books Dutch edition (free, no quota)
+  // 2. MyMemory translation of English description (50K chars/day free)
+  let summary_nl = meta.summary_nl ?? null;
+  if (!summary_nl && summary) {
+    summary_nl = await translateToNl(summary);
+  }
+
   const genreSlugs = mapSubjectsToGenres(meta.subjects ?? []);
 
   return {
@@ -50,10 +59,11 @@ export async function enrichBook({
     pages:            meta.pages,
     language:         meta.language,
     summary,
+    summary_nl,
     cover_path:       cover_path ?? null,
     goodreads_rating: null,
     goodreads_count:  null,
     slug:             bookSlug(meta.isbn),
-    genreSlugs,       // passed through to upsert layer for book_genres
+    genreSlugs,
   };
 }

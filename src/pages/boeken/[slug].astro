@@ -17,7 +17,8 @@ const genres     = getGenresForBook(book.id);
 const siteUrl    = 'https://top-boeken.nl';
 const coverUrl   = book.cover_path ? `${siteUrl}/${book.cover_path}` : null;
 const n          = lists.length;
-const excerpt    = book.summary ? book.summary.slice(0, 150) + '…' : '';
+const descForSeo = book.summary_nl || book.summary || '';
+const excerpt    = descForSeo ? descForSeo.slice(0, 150) + '…' : '';
 
 const jsonLd = [
   {

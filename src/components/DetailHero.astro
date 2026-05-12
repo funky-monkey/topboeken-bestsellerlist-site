@@ -61,7 +61,17 @@ const [firstWord, ...restWords] = book.title.split(' ');
       {book.language && <div class="meta-item"><div class="meta-label">Taal</div><div class="meta-value">{book.language === 'nl' ? 'Nederlands' : 'Engels'}</div></div>}
     </div>
 
-    {book.summary && <p class="detail-summary">{book.summary}</p>}
+    {(book.summary || book.summary_nl) && (
+      <p
+        id="book-summary"
+        class="detail-summary"
+        data-nl={book.summary_nl ?? ''}
+        data-en={book.summary ?? ''}
+      >
+        {book.summary_nl || book.summary}
+      </p>
+    )}
+    <script src="/scripts/lang-description.js" is:inline></script>
 
     <BuyButtons affiliates={affiliates} />
   </div>

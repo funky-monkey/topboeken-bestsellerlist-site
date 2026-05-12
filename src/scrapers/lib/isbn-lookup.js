@@ -5,45 +5,79 @@ const limiter = new RateLimiter(3);
 const SEARCH_URL  = 'https://openlibrary.org/search.json';
 const GOOGLE_BASE = 'https://www.googleapis.com/books/v1/volumes';
 
-async function lookupGoogleBooks(title, author) {
-  const key = process.env.GOOGLE_BOOKS_API_KEY;
+async function googleBooksSearch(q, lang) {
+  const key  = process.env.GOOGLE_BOOKS_API_KEY;
   if (!key) return null;
   try {
-    const q    = encodeURIComponent(`intitle:${title}+inauthor:${author}`);
-    const data = await fetchJson(`${GOOGLE_BASE}?q=${q}&maxResults=3&langRestrict=en&orderBy=relevance&key=${key}`);
-    // Pick the first English-language result that has an ISBN-13
-    const item = data.items?.find(i => {
-      const lang = i.volumeInfo?.language;
-      const hasIsbn = i.volumeInfo?.industryIdentifiers?.some(id => id.type === 'ISBN_13');
-      return hasIsbn && (!lang || lang === 'en' || lang === 'nl');
-    });
-    const info = item?.volumeInfo;
-    if (!info) return null;
-    const isbn13 = info.industryIdentifiers?.find(i => i.type === 'ISBN_13')?.identifier ?? null;
-    if (!isbn13) return null;
-    return {
-      isbn:      isbn13,
-      title:     info.title ?? title,
-      author:    info.authors?.[0] ?? author,
-      publisher: info.publisher ?? null,
-      pages:     info.pageCount ?? null,
-      language:  info.language ?? null,
-      summary:   info.description ?? null,
-      coverUrl:  info.imageLinks?.thumbnail?.replace('http:', 'https:') ?? null,
-      coverId:   null,
-      subjects:  info.categories ?? [],
-    };
+    const data = await fetchJson(
+      `${GOOGLE_BASE}?q=${q}&maxResults=5&langRestrict=${lang}&orderBy=relevance&key=${key}`
+    );
+    return data.items?.find(i => {
+      const info = i.volumeInfo;
+      if (!info?.industryIdentifiers?.some(id => id.type === 'ISBN_13')) return false;
+      // For Dutch: must be explicitly Dutch
+      // For English: accept 'en' or undefined (trust langRestrict), reject non-Latin scripts
+      if (lang === 'nl') return info.language === 'nl';
+      if (lang === 'en') {
+        const l = info.language;
+        if (l && l !== 'en') return false;
+        // Reject non-Latin descriptions (e.g. Tamil, Chinese)
+        const desc = info.description ?? '';
+        return !desc || /^[\x00-\x7FÀ-ɏ\s]+$/.test(desc.slice(0, 50));
+      }
+      return true;
+    }) ?? null;
   } catch { return null; }
 }
 
+function extractGoogleInfo(item, title, author) {
+  const info   = item?.volumeInfo;
+  if (!info) return null;
+  const isbn13 = info.industryIdentifiers?.find(i => i.type === 'ISBN_13')?.identifier ?? null;
+  if (!isbn13) return null;
+  return {
+    isbn:      isbn13,
+    title:     info.title ?? title,
+    author:    info.authors?.[0] ?? author,
+    publisher: info.publisher ?? null,
+    pages:     info.pageCount ?? null,
+    language:  info.language ?? null,
+    summary:   info.description ?? null,
+    coverUrl:  info.imageLinks?.thumbnail?.replace('http:', 'https:') ?? null,
+    coverId:   null,
+    subjects:  info.categories ?? [],
+  };
+}
+
 export async function lookupIsbn(title, author) {
-  // Try Google Books first if key is available — better descriptions and genre coverage
-  const google = await lookupGoogleBooks(title, author);
-  if (google) return google;
+  const key = process.env.GOOGLE_BOOKS_API_KEY;
 
-  // Fall back to Open Library
+  if (key) {
+    const q = encodeURIComponent(`intitle:${title}+inauthor:${author}`);
+
+    // 1. Try Dutch edition first — Dutch description is most valuable
+    const nlItem = await googleBooksSearch(q, 'nl');
+    const nlData = extractGoogleInfo(nlItem, title, author);
+    if (nlData) {
+      // Also try English for subjects/categories if Dutch edition lacks them
+      const enItem = await googleBooksSearch(q, 'en');
+      const enData = extractGoogleInfo(enItem, title, author);
+      return {
+        ...nlData,
+        summary_nl: nlData.summary,   // Dutch description
+        summary:    enData?.summary ?? null, // English description (may be null)
+        subjects:   enData?.subjects?.length ? enData.subjects : nlData.subjects,
+      };
+    }
+
+    // 2. No Dutch edition — use English edition, no Dutch description
+    const enItem = await googleBooksSearch(q, 'en');
+    const enData = extractGoogleInfo(enItem, title, author);
+    if (enData) return { ...enData, summary_nl: null };
+  }
+
+  // 3. Fall back to Open Library
   await limiter.wait();
-
   const params = new URLSearchParams({
     title, author, limit: '1',
     fields: 'isbn,title,author_name,publisher,number_of_pages_median,language,first_sentence,cover_i,subject',
@@ -61,15 +95,16 @@ export async function lookupIsbn(title, author) {
     : (typeof rawSentence?.value === 'string' ? rawSentence.value : null);
 
   return {
-    isbn:      isbn13,
-    title:     typeof doc.title === 'string' ? doc.title : title,
-    author:    typeof doc.author_name?.[0] === 'string' ? doc.author_name[0] : author,
-    publisher: typeof doc.publisher?.[0] === 'string' ? doc.publisher[0] : null,
-    pages:     typeof doc.number_of_pages_median === 'number' ? doc.number_of_pages_median : null,
-    language:  typeof doc.language?.[0] === 'string' ? doc.language[0] : null,
+    isbn:       isbn13,
+    title:      typeof doc.title === 'string' ? doc.title : title,
+    author:     typeof doc.author_name?.[0] === 'string' ? doc.author_name[0] : author,
+    publisher:  typeof doc.publisher?.[0] === 'string' ? doc.publisher[0] : null,
+    pages:      typeof doc.number_of_pages_median === 'number' ? doc.number_of_pages_median : null,
+    language:   typeof doc.language?.[0] === 'string' ? doc.language[0] : null,
     summary,
-    coverUrl:  null,
-    coverId:   typeof doc.cover_i === 'number' ? doc.cover_i : null,
-    subjects:  Array.isArray(doc.subject) ? doc.subject.slice(0, 20) : [],
+    summary_nl: null,
+    coverUrl:   null,
+    coverId:    typeof doc.cover_i === 'number' ? doc.cover_i : null,
+    subjects:   Array.isArray(doc.subject) ? doc.subject.slice(0, 20) : [],
   };
 }

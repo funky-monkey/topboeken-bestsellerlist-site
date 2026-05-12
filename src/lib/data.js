@@ -17,7 +17,9 @@ export function getGenreBySlug(slug) {
 }
 
 export function getBookBySlug(slug) {
-  return getDb().prepare('SELECT * FROM books WHERE slug = ?').get(slug);
+  return getDb().prepare(
+    'SELECT *, coalesce(summary_nl, summary) as summary_display FROM books WHERE slug = ?'
+  ).get(slug);
 }
 
 function latestWeek(db, sourceSlug) {
