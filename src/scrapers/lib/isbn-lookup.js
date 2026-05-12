@@ -11,10 +11,12 @@ async function lookupGoogleBooks(title, author) {
   try {
     const q    = encodeURIComponent(`intitle:${title}+inauthor:${author}`);
     const data = await fetchJson(`${GOOGLE_BASE}?q=${q}&maxResults=3&langRestrict=en&orderBy=relevance&key=${key}`);
-    // Pick the first result that has an ISBN-13
-    const item = data.items?.find(i =>
-      i.volumeInfo?.industryIdentifiers?.some(id => id.type === 'ISBN_13')
-    );
+    // Pick the first English-language result that has an ISBN-13
+    const item = data.items?.find(i => {
+      const lang = i.volumeInfo?.language;
+      const hasIsbn = i.volumeInfo?.industryIdentifiers?.some(id => id.type === 'ISBN_13');
+      return hasIsbn && (!lang || lang === 'en' || lang === 'nl');
+    });
     const info = item?.volumeInfo;
     if (!info) return null;
     const isbn13 = info.industryIdentifiers?.find(i => i.type === 'ISBN_13')?.identifier ?? null;
