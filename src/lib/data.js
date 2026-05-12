@@ -55,7 +55,7 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
   `).all(sourceSlug, latest);
 }
 
-export function getFullListForSource(sourceSlug, limit = 60) {
+export function getFullListForSource(sourceSlug, limit = 500) {
   const db = getDb();
   const latest = latestWeek(db, sourceSlug);
   return db.prepare(`
