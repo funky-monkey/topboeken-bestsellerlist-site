@@ -1,0 +1,47 @@
+#admin-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  height: 44px;
+  background: #1a1a1a;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.admin-bar-label {
+  color: #888;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.admin-bar-btn {
+  background: #3b82f6;
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+
+.admin-bar-btn:hover {
+  background: #2563eb;
+}
+
+.admin-bar-link {
+  color: #aaa;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.admin-bar-link:hover {
+  color: #fff;
+}

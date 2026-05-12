@@ -57,6 +57,7 @@ const jsonLd = [
   ogType="book"
   jsonLd={jsonLd}
   preloadImage={book.cover_path ? `/${book.cover_path}` : undefined}
+  editUrl={`/admin/books/${book.id}`}
 >
   <div style="background:#fff;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <DetailHero book={book} lists={lists} affiliates={affiliates} genres={genres} />

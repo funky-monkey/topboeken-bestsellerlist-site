@@ -10,6 +10,7 @@ import affiliatesRoutes from './routes/affiliates.js';
 import logsRoutes       from './routes/logs.js';
 import scrapeRoutes     from './routes/scrape.js';
 import rebuildRoutes    from './routes/rebuild.js';
+import authStatusRoutes from './routes/auth-status.js';
 
 const app  = express();
 const PORT = process.env.PORT ?? 3001;
@@ -35,7 +36,8 @@ app.use('/admin', requireAuth, affiliatesRoutes);
 app.use('/admin', requireAuth, logsRoutes);
 app.use('/admin', requireAuth, scrapeRoutes);
 
-// API routes
+// API routes — auth-status is public (no requireAuth), rebuild is protected
+app.use('/api', authStatusRoutes);
 app.use('/api', requireAuth, rebuildRoutes);
 
 app.listen(PORT, () => console.log(`CMS running on http://localhost:${PORT}/admin`));
