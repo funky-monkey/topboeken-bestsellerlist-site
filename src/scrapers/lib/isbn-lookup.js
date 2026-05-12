@@ -9,9 +9,13 @@ async function lookupGoogleBooks(title, author) {
   const key = process.env.GOOGLE_BOOKS_API_KEY;
   if (!key) return null;
   try {
-    const q    = encodeURIComponent(`${title} ${author}`);
-    const data = await fetchJson(`${GOOGLE_BASE}?q=${q}&maxResults=1&key=${key}`);
-    const info = data.items?.[0]?.volumeInfo;
+    const q    = encodeURIComponent(`intitle:${title}+inauthor:${author}`);
+    const data = await fetchJson(`${GOOGLE_BASE}?q=${q}&maxResults=3&langRestrict=en&orderBy=relevance&key=${key}`);
+    // Pick the first result that has an ISBN-13
+    const item = data.items?.find(i =>
+      i.volumeInfo?.industryIdentifiers?.some(id => id.type === 'ISBN_13')
+    );
+    const info = item?.volumeInfo;
     if (!info) return null;
     const isbn13 = info.industryIdentifiers?.find(i => i.type === 'ISBN_13')?.identifier ?? null;
     if (!isbn13) return null;
