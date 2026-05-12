@@ -106,7 +106,10 @@ router.get('/books/:id', (req, res) => {
       <input type="checkbox" name="genres" value="${g.id}" ${activeSlugs.includes(g.slug) ? 'checked' : ''}> ${g.name_nl}
     </label>`).join('');
 
-  const flash = req.query.saved ? '<div class="flash flash-ok">Wijzigingen opgeslagen.</div>' : '';
+  const siteUrl = process.env.SITE_URL ?? 'https://top-boeken.nl';
+  const flash = req.query.saved
+    ? `<div class="flash flash-ok">Wijzigingen opgeslagen. <a href="${siteUrl}/boeken/${book.slug}" target="_blank" style="font-weight:700;color:#166534;text-decoration:underline">Bekijk op site →</a></div>`
+    : '';
   const coverPreview = book.cover_path
     ? `<img src="/${book.cover_path}" style="height:120px;object-fit:cover;display:block;margin-bottom:8px">`
     : '<p style="color:#aaa;font-size:13px;margin-bottom:8px">Geen cover</p>';
@@ -124,8 +127,11 @@ router.get('/books/:id', (req, res) => {
       <p style="font-size:12px;color:#888;margin-bottom:12px">Upload een nieuw omslagfoto (JPG/PNG, max 5MB). Laat leeg om de huidige te behouden.</p>
       <label style="margin-bottom:8px">Genres</label>
       <div style="margin-bottom:16px">${checkboxes}</div>
-      <button class="btn btn-primary" type="submit">Opslaan</button>
-      &nbsp;<a href="/admin/books" class="btn" style="background:#eee;color:#333">Annuleren</a>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" type="submit">Opslaan</button>
+        <a href="/admin/books" class="btn" style="background:#eee;color:#333">Annuleren</a>
+        <a href="${siteUrl}/boeken/${book.slug}" target="_blank" class="btn" style="background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;margin-left:auto">👁 Bekijk op site →</a>
+      </div>
     </form>
   `));
 });
