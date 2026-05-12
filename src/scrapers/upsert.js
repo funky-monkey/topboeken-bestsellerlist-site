@@ -43,6 +43,16 @@ export function upsertListEntry(entry) {
   `).run(entry);
 }
 
+export function upsertBookGenres(bookId, genreSlugs = []) {
+  if (!genreSlugs.length) return;
+  const db = getDb();
+  const insert = db.prepare(`
+    INSERT OR IGNORE INTO book_genres (book_id, genre_id)
+    SELECT ?, id FROM genres WHERE slug = ?
+  `);
+  db.transaction(() => genreSlugs.forEach(slug => insert.run(bookId, slug)))();
+}
+
 export function upsertBookAffiliate({ book_id, affiliate_slug, url }) {
   const db = getDb();
   const affiliate = db.prepare('SELECT id FROM affiliates WHERE slug = ?').get(affiliate_slug);

@@ -152,6 +152,32 @@
   color: var(--text);
 }
 
+.detail-genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.detail-genre-tag {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #f1f1ef;
+  color: #555;
+  text-decoration: none;
+  border: 1.5px solid #e5e5e5;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.detail-genre-tag:hover {
+  background: #232323;
+  color: #fff;
+  border-color: #232323;
+}
+
 .detail-summary {
   font-size: 15px;
   line-height: 1.8;

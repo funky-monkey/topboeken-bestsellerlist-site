@@ -45,7 +45,16 @@ const [firstWord, ...restWords] = book.title.split(' ');
     )}
 
     <div class="detail-meta">
-      {genres[0] && <div class="meta-item"><div class="meta-label">Genre</div><div class="meta-value">{genres[0].name_nl}</div></div>}
+      {genres.length > 0 && (
+        <div class="meta-item">
+          <div class="meta-label">Genre</div>
+          <div class="detail-genre-tags">
+            {genres.map(g => (
+              <a href={`/genre/${g.slug}`} class="detail-genre-tag">{g.name_nl}</a>
+            ))}
+          </div>
+        </div>
+      )}
       {book.publisher && <div class="meta-item"><div class="meta-label">Uitgever</div><div class="meta-value">{book.publisher}</div></div>}
       {book.pages && <div class="meta-item"><div class="meta-label">Pagina's</div><div class="meta-value">{book.pages}</div></div>}
       <div class="meta-item"><div class="meta-label">ISBN</div><div class="meta-value">{book.isbn}</div></div>

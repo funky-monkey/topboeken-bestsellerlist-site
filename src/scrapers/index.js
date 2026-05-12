@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { getDb, initSchema } from '../db/db.js';
 import { seedGenres, seedSources, seedAffiliates } from '../db/seed.js';
 import { enrichBook } from './lib/enricher.js';
-import { upsertBook, upsertListEntry, upsertBookAffiliate } from './upsert.js';
+import { upsertBook, upsertListEntry, upsertBookAffiliate, upsertBookGenres } from './upsert.js';
 import { scrapeNyTimes }          from './sources/nytimes.js';
 import { scrapeBesteller60 }      from './sources/besteller60.js';
 import { scrapeBolcom }           from './sources/bolcom.js';
@@ -61,6 +61,11 @@ async function run() {
           }
 
           const bookId = existing ? existing.id : upsertBook(bookData);
+
+          // Populate genres from enrichment
+          if (bookData.genreSlugs?.length) {
+            upsertBookGenres(bookId, bookData.genreSlugs);
+          }
 
           upsertListEntry({ book_id: bookId, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
           const title  = bookData.title  ?? entry.title;
