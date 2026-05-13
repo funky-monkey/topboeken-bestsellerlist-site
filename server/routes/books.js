@@ -198,9 +198,10 @@ router.get('/books/:id', (req, res) => {
       </script>
       <label style="margin-bottom:8px">Genres</label>
       <div style="margin-bottom:16px">${checkboxes}</div>
-      <div style="display:flex;gap:10px;align-items:center">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-primary" type="submit">Opslaan</button>
         <a href="/admin/books" class="btn" style="background:#eee;color:#333">Annuleren</a>
+        <a href="/admin/books/${book.id}/merge" class="btn" style="background:#fefce8;color:#854d0e;border:1.5px solid #fde68a">⇄ Samenvoegen</a>
         <a href="${siteUrl}/boeken/${book.slug}" target="_blank" class="btn" style="background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;margin-left:auto">👁 Bekijk op site →</a>
       </div>
     </form>
@@ -265,6 +266,89 @@ router.post('/books/:id', upload.single('cover'), async (req, res) => {
     ? `?error=${encodeURIComponent(errorMsg)}`
     : '?saved=1';
   res.redirect(`/admin/books/${id}${qs}`);
+});
+
+// ── Merge ─────────────────────────────────────────────────────────────────────
+
+router.get('/books/:id/merge', (req, res) => {
+  const db = getDb();
+  const book = db.prepare('SELECT * FROM books WHERE id = ?').get(req.params.id);
+  if (!book) return res.status(404).send('Niet gevonden');
+
+  const q = req.query.q ?? '';
+  let results = [];
+  if (q) {
+    results = db.prepare(`
+      SELECT id, title, author, isbn, cover_path FROM books
+      WHERE (title LIKE ? OR isbn LIKE ?) AND id != ?
+      ORDER BY title ASC LIMIT 8
+    `).all(`%${q}%`, `%${q}%`, book.id);
+  }
+
+  const rows = results.map(r => `
+    <tr>
+      <td style="width:36px">${r.cover_path ? `<img src="/${r.cover_path}" width="28" style="vertical-align:middle;object-fit:contain">` : ''}</td>
+      <td><strong>${r.title}</strong><br><span style="font-size:12px;color:#888">${r.author} — ISBN ${r.isbn}</span></td>
+      <td style="width:140px">
+        <form method="post" action="/admin/books/${book.id}/merge" style="margin:0"
+          onsubmit="return confirm('Samenvoegen? ${book.title} wordt verwijderd, alle lijstvermeldingen gaan naar het gekozen boek.')">
+          <input type="hidden" name="target_id" value="${r.id}">
+          <button class="btn btn-primary" style="padding:4px 10px;font-size:12px">← Samenvoegen</button>
+        </form>
+      </td>
+    </tr>`).join('');
+
+  res.send(layout(`Samenvoegen — ${book.title}`, `
+    <h1>Boek samenvoegen</h1>
+    <div style="background:#fff3cd;border:1px solid #ffc107;padding:12px 16px;border-radius:4px;margin-bottom:24px;font-size:14px">
+      <strong>Dit boek wordt verwijderd:</strong> ${book.title} <span style="color:#888">(ISBN ${book.isbn})</span><br>
+      Alle lijst­vermeldingen, genres en artikel­koppelingen worden overgezet naar het gekozen doelboek.
+    </div>
+    <form method="get" style="display:flex;gap:8px;margin-bottom:16px">
+      <input name="q" value="${q}" placeholder="Zoek doelboek op titel of ISBN…" style="width:320px;margin:0">
+      <button class="btn btn-primary" type="submit">Zoeken</button>
+    </form>
+    ${results.length ? `<table>${rows}</table>` : (q ? '<p style="color:#aaa;font-size:13px">Geen resultaten.</p>' : '')}
+    <p style="margin-top:24px"><a href="/admin/books/${book.id}" class="btn">← Terug</a></p>
+  `));
+});
+
+router.post('/books/:id/merge', (req, res) => {
+  const db = getDb();
+  const sourceId = parseInt(req.params.id, 10);
+  const targetId = parseInt(req.body.target_id, 10);
+  if (!sourceId || !targetId || sourceId === targetId) return res.redirect(`/admin/books/${sourceId}`);
+
+  db.transaction(() => {
+    // Move list entries (skip conflicts — target already has that week/list)
+    db.prepare(`
+      INSERT OR IGNORE INTO list_entries (book_id, source_id, genre_id, rank, list_name, week_date, scraped_at)
+      SELECT ?, source_id, genre_id, rank, list_name, week_date, scraped_at FROM list_entries WHERE book_id = ?
+    `).run(targetId, sourceId);
+
+    // Move genres
+    db.prepare(`
+      INSERT OR IGNORE INTO book_genres (book_id, genre_id)
+      SELECT ?, genre_id FROM book_genres WHERE book_id = ?
+    `).run(targetId, sourceId);
+
+    // Move affiliate links (keep target's if conflict)
+    db.prepare(`
+      INSERT OR IGNORE INTO book_affiliates (book_id, affiliate_id, url, price, currency, updated_at)
+      SELECT ?, affiliate_id, url, price, currency, updated_at FROM book_affiliates WHERE book_id = ?
+    `).run(targetId, sourceId);
+
+    // Move article book entries
+    db.prepare(`
+      INSERT OR IGNORE INTO article_books (article_id, book_id, description, position)
+      SELECT article_id, ?, description, position FROM article_books WHERE book_id = ?
+    `).run(targetId, sourceId);
+
+    // Delete source (cascades remaining FK references)
+    db.prepare('DELETE FROM books WHERE id = ?').run(sourceId);
+  })();
+
+  res.redirect(`/admin/books/${targetId}?saved=1`);
 });
 
 export default router;
