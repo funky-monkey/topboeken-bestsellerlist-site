@@ -36,6 +36,7 @@ router.get(['/', ''], (req, res) => {
       <form method="post" action="/api/rebuild">
         <button class="btn btn-success" type="submit">🚀 Publiceer nu</button>
       </form>
+      <a href="/admin/enrich-covers" class="btn">🖼 Covers aanvullen</a>
     </div>
     <h2>Recente scrape-runs</h2>
     <table>
