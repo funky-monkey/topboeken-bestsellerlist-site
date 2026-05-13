@@ -23,13 +23,17 @@ const PER_PAGE = 25;
 const router = Router();
 
 router.get('/books', (req, res) => {
-  const q    = req.query.q ?? '';
-  const page = Math.max(1, parseInt(req.query.page ?? '1', 10));
-  const offset = (page - 1) * PER_PAGE;
-  const db   = getDb();
+  const q         = req.query.q ?? '';
+  const noCover   = req.query.no_cover === '1';
+  const page      = Math.max(1, parseInt(req.query.page ?? '1', 10));
+  const offset    = (page - 1) * PER_PAGE;
+  const db        = getDb();
 
-  const where = q ? 'WHERE title LIKE ? OR author LIKE ?' : '';
-  const args  = q ? [`%${q}%`, `%${q}%`] : [];
+  const conditions = [];
+  const args = [];
+  if (q) { conditions.push('(title LIKE ? OR author LIKE ?)'); args.push(`%${q}%`, `%${q}%`); }
+  if (noCover) { conditions.push("(cover_path IS NULL OR cover_path = '')"); }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const siteUrl    = process.env.SITE_URL ?? 'https://top-boeken.nl';
   const total      = db.prepare(`SELECT COUNT(*) as c FROM books ${where}`).get(...args).c;
@@ -70,7 +74,7 @@ router.get('/books', (req, res) => {
   }).join('');
 
   function pageUrl(p) {
-    const params = new URLSearchParams({ ...(q ? { q } : {}), page: p });
+    const params = new URLSearchParams({ ...(q ? { q } : {}), ...(noCover ? { no_cover: '1' } : {}), page: p });
     return `/admin/books?${params}`;
   }
 
@@ -103,12 +107,19 @@ router.get('/books', (req, res) => {
       ${pageBtn(page + 1, 'Volgende →', page === totalPages)}
     </div>` : '';
 
+  const noCoverCount = db.prepare("SELECT COUNT(*) as c FROM books WHERE cover_path IS NULL OR cover_path = ''").get().c;
+  const noCoverToggle = noCover
+    ? `<a href="/admin/books${q ? `?q=${encodeURIComponent(q)}` : ''}" class="btn" style="background:#fef2f2;color:#991b1b;border:1px solid #fecaca">✕ Zonder cover (${noCoverCount})</a>`
+    : `<a href="/admin/books?${new URLSearchParams({ ...(q ? { q } : {}), no_cover: '1' })}" class="btn" style="background:#f5f5f5;color:#555">Zonder cover (${noCoverCount})</a>`;
+
   res.send(layout('Boeken', `
     <h1>Boeken</h1>
-    <form method="get" style="margin-bottom:20px;display:flex;gap:8px;align-items:center">
+    <form method="get" style="margin-bottom:20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input name="q" value="${q}" placeholder="Zoek op titel of auteur…" style="width:320px;margin-bottom:0">
+      ${noCover ? `<input type="hidden" name="no_cover" value="1">` : ''}
       <button class="btn btn-primary" type="submit">Zoeken</button>
-      <span style="color:#888;font-size:13px;margin-left:8px">${total} boeken${q ? ` voor "${q}"` : ''}</span>
+      ${noCoverToggle}
+      <span style="color:#888;font-size:13px;margin-left:4px">${total} boeken${q ? ` voor "${q}"` : ''}</span>
     </form>
     <table>
       <thead><tr><th>Titel</th><th>Auteur</th><th>Bronnen</th><th>Bijgewerkt</th><th></th></tr></thead>

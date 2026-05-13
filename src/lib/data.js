@@ -41,6 +41,7 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
       JOIN book_genres bg ON bg.book_id = b.id
       JOIN genres g   ON g.id  = bg.genre_id
       WHERE s.slug = ? AND le.week_date = ? AND g.slug = ?
+        AND b.cover_path IS NOT NULL AND b.cover_path != ''
       GROUP BY UPPER(TRIM(b.title))
       ORDER BY rank ASC LIMIT 10
     `).all(sourceSlug, latest, genreSlug);
@@ -52,6 +53,7 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
     JOIN books b   ON b.id = le.book_id
     JOIN sources s ON s.id = le.source_id
     WHERE s.slug = ? AND le.week_date = ?
+      AND b.cover_path IS NOT NULL AND b.cover_path != ''
     GROUP BY UPPER(TRIM(b.title))
     ORDER BY rank ASC LIMIT 10
   `).all(sourceSlug, latest);
@@ -66,6 +68,7 @@ export function getFullListForSource(sourceSlug, limit = 500) {
     JOIN books b   ON b.id = le.book_id
     JOIN sources s ON s.id = le.source_id
     WHERE s.slug = ? AND le.week_date = ?
+      AND b.cover_path IS NOT NULL AND b.cover_path != ''
     GROUP BY le.book_id
     ORDER BY rank ASC LIMIT ?
   `).all(sourceSlug, latest, limit);
@@ -107,13 +110,19 @@ export function getGenresForBook(bookId) {
 }
 
 export function getAllBookSlugs() {
-  return getDb().prepare('SELECT slug FROM books').all().map(r => r.slug);
+  return getDb().prepare(
+    "SELECT slug FROM books WHERE cover_path IS NOT NULL AND cover_path != ''"
+  ).all().map(r => r.slug);
 }
 
 export function getAllBooksForSearch() {
-  return getDb().prepare('SELECT slug, title, author, cover_path FROM books ORDER BY title ASC').all();
+  return getDb().prepare(
+    "SELECT slug, title, author, cover_path FROM books WHERE cover_path IS NOT NULL AND cover_path != '' ORDER BY title ASC"
+  ).all();
 }
 
 export function getAllBooks() {
-  return getDb().prepare('SELECT slug, updated_at FROM books ORDER BY updated_at DESC').all();
+  return getDb().prepare(
+    "SELECT slug, updated_at FROM books WHERE cover_path IS NOT NULL AND cover_path != '' ORDER BY updated_at DESC"
+  ).all();
 }
