@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { join } from 'node:path';
+import { createWriteStream, mkdirSync, existsSync } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
 import { getDb } from '../../src/db/db.js';
 import { layout } from '../views/layout.js';
 
@@ -113,6 +115,8 @@ router.get('/books/:id', (req, res) => {
   const siteUrl = process.env.SITE_URL ?? 'https://top-boeken.nl';
   const flash = req.query.saved
     ? `<div class="flash flash-ok">Wijzigingen opgeslagen. <a href="${siteUrl}/boeken/${book.slug}" target="_blank" style="font-weight:700;color:#166534;text-decoration:underline">Bekijk op site →</a></div>`
+    : req.query.error
+    ? `<div class="flash flash-err">${req.query.error}</div>`
     : '';
   const currentCover = book.cover_path
     ? `<img id="cover-preview" src="/${book.cover_path}" style="height:160px;object-fit:contain;display:block;margin-bottom:8px;background:#f5f4f1;padding:4px">`
@@ -127,16 +131,39 @@ router.get('/books/:id', (req, res) => {
       <label>Samenvatting</label><textarea name="summary" rows="5">${book.summary ?? ''}</textarea>
       <label>Cover</label>
       ${currentCover}
-      <input type="file" name="cover" accept="image/*" style="margin-bottom:8px" id="cover-input">
-      <p style="font-size:12px;color:#888;margin-bottom:12px">Upload een nieuw omslagfoto (JPG/PNG, max 5MB). Laat leeg om de huidige te behouden.</p>
+
+      <label style="margin-bottom:4px">Bestand uploaden</label>
+      <input type="file" name="cover" accept="image/*" style="margin-bottom:12px" id="cover-input">
+
+      <label style="margin-bottom:4px">Of: URL van afbeelding</label>
+      <div style="display:flex;gap:8px;margin-bottom:4px">
+        <input type="url" name="cover_url" id="cover-url-input" placeholder="https://..." style="margin-bottom:0;flex:1">
+        <button type="button" onclick="previewUrl()" class="btn" style="background:#eee;color:#333;white-space:nowrap">Voorbeeld</button>
+      </div>
+      <p style="font-size:12px;color:#888;margin-bottom:16px">Bestand upload heeft voorrang op URL. Laat beide leeg om huidige te bewaren.</p>
+
       <script>
         document.getElementById('cover-input').addEventListener('change', function() {
           const file = this.files[0];
           if (!file) return;
-          const preview = document.getElementById('cover-preview');
           const url = URL.createObjectURL(file);
-          preview.outerHTML = '<img id="cover-preview" src="' + url + '" style="height:160px;object-fit:contain;display:block;margin-bottom:8px;background:#f5f4f1;padding:4px">';
+          setPreview(url);
+          document.getElementById('cover-url-input').value = '';
         });
+
+        function previewUrl() {
+          const url = document.getElementById('cover-url-input').value.trim();
+          if (url) setPreview(url);
+        }
+
+        document.getElementById('cover-url-input').addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); previewUrl(); }
+        });
+
+        function setPreview(src) {
+          const el = document.getElementById('cover-preview');
+          el.outerHTML = '<img id="cover-preview" src="' + src + '" style="height:160px;object-fit:contain;display:block;margin-bottom:8px;background:#f5f4f1;padding:4px" onerror="this.style.outline=\'2px solid red\'">';
+        }
       </script>
       <label style="margin-bottom:8px">Genres</label>
       <div style="margin-bottom:16px">${checkboxes}</div>
@@ -149,15 +176,40 @@ router.get('/books/:id', (req, res) => {
   `));
 });
 
-router.post('/books/:id', upload.single('cover'), (req, res) => {
+async function downloadCoverFromUrl(url, destPath) {
+  const res = await fetch(url, { headers: { 'User-Agent': 'TopBoeken/1.0 (sidney@funky-monkey.nl)' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const ct = res.headers.get('content-type') ?? '';
+  if (!ct.includes('image')) throw new Error(`Not an image (${ct})`);
+  const dir = join(destPath, '..');
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  const stream = createWriteStream(destPath);
+  await pipeline(res.body, stream);
+}
+
+router.post('/books/:id', upload.single('cover'), async (req, res) => {
   const db = getDb();
-  const { title, author, summary, genres } = req.body;
+  const { title, author, summary, genres, cover_url } = req.body;
   const id = parseInt(req.params.id, 10);
 
   const book = db.prepare('SELECT isbn, cover_path FROM books WHERE id = ?').get(id);
-  const newCoverPath = req.file
-    ? `covers/${book.isbn}.jpg`
-    : (book.cover_path || null);
+  const coversDir = process.env.COVERS_DIR ?? '/var/www/top-boeken.nl/html/covers';
+  let newCoverPath = book.cover_path || null;
+  let errorMsg = null;
+
+  if (req.file) {
+    // File upload takes priority
+    newCoverPath = `covers/${book.isbn}.jpg`;
+  } else if (cover_url?.trim()) {
+    // Download from URL
+    const dest = join(coversDir, `${book.isbn}.jpg`);
+    try {
+      await downloadCoverFromUrl(cover_url.trim(), dest);
+      newCoverPath = `covers/${book.isbn}.jpg`;
+    } catch (err) {
+      errorMsg = `Cover URL mislukt: ${err.message}`;
+    }
+  }
 
   db.prepare("UPDATE books SET title=?, author=?, summary=?, cover_path=?, updated_at=datetime('now') WHERE id=?")
     .run(title, author, summary || null, newCoverPath, id);
@@ -167,7 +219,10 @@ router.post('/books/:id', upload.single('cover'), (req, res) => {
   const ids = Array.isArray(genres) ? genres : genres ? [genres] : [];
   db.transaction(() => ids.forEach(gid => insertGenre.run(id, parseInt(gid, 10))))();
 
-  res.redirect(`/admin/books/${id}?saved=1`);
+  const qs = errorMsg
+    ? `?error=${encodeURIComponent(errorMsg)}`
+    : '?saved=1';
+  res.redirect(`/admin/books/${id}${qs}`);
 });
 
 export default router;
