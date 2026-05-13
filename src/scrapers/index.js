@@ -3,6 +3,7 @@ import { getDb, initSchema } from '../db/db.js';
 import { seedGenres, seedSources, seedAffiliates } from '../db/seed.js';
 import { enrichBook } from './lib/enricher.js';
 import { upsertBook, upsertListEntry, upsertBookAffiliate, upsertBookGenres } from './upsert.js';
+import { amazonUrl, bolUrl } from './lib/affiliate-links.js';
 import { scrapeNyTimes }          from './sources/nytimes.js';
 import { scrapeBesteller60 }      from './sources/besteller60.js';
 import { scrapeBolcom }           from './sources/bolcom.js';
@@ -70,9 +71,11 @@ async function run() {
           upsertListEntry({ book_id: bookId, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
           const title  = bookData.title  ?? entry.title;
           const author = bookData.author ?? entry.author;
-          const searchQuery = encodeURIComponent(`${title} ${author}`);
-          upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'bol-com',   url: `https://www.bol.com/nl/s/?searchtext=${searchQuery}` });
-          upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'amazon-nl', url: `https://www.amazon.nl/s?k=${searchQuery}` });
+          const isbn = bookData.isbn ?? entry.isbn;
+          upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'amazon-nl', url: amazonUrl(isbn) });
+          // bol.com: try to get direct product URL, fall back to search
+          const bolLink = await bolUrl(isbn);
+          upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'bol-com', url: bolLink });
         } catch (bookErr) {
           console.warn(`  Skipping "${entry.title}": ${bookErr.message}`);
         }
