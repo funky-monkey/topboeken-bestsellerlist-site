@@ -232,7 +232,7 @@ router.get('/books/:id', (req, res) => {
 
       <label style="margin-bottom:4px">Of: URL van afbeelding</label>
       <div style="display:flex;gap:8px;margin-bottom:4px">
-        <input type="url" name="cover_url" id="cover-url-input" placeholder="https://..." style="margin-bottom:0;flex:1">
+        <input type="text" name="cover_url" id="cover-url-input" placeholder="https://..." style="margin-bottom:0;flex:1">
         <button type="button" onclick="previewUrl()" class="btn" style="background:#eee;color:#333;white-space:nowrap">Voorbeeld</button>
       </div>
       <p style="font-size:12px;color:#888;margin-bottom:16px">Bestand upload heeft voorrang op URL. Laat beide leeg om huidige te bewaren.</p>
@@ -288,14 +288,15 @@ router.get('/books/:id', (req, res) => {
 });
 
 async function downloadCoverFromUrl(url, destPath) {
-  const res = await fetch(url, { headers: { 'User-Agent': 'TopBoeken/1.0 (sidney@funky-monkey.nl)' } });
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TopBoeken/1.0)' },
+    redirect: 'follow',
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const ct = res.headers.get('content-type') ?? '';
-  if (!ct.includes('image')) throw new Error(`Geen afbeelding (${ct})`);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  if (buffer.length < 1000) throw new Error(`Bestand te klein (${buffer.length} bytes) — waarschijnlijk geen afbeelding`);
   const dir = join(destPath, '..');
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  // Use arrayBuffer — works with Web Streams API from fetch()
-  const buffer = Buffer.from(await res.arrayBuffer());
   writeFileSync(destPath, buffer);
 }
 
