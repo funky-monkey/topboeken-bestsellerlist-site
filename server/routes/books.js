@@ -25,11 +25,13 @@ const router = Router();
 router.get('/books', (req, res) => {
   const q            = req.query.q ?? '';
   const noCover      = req.query.no_cover === '1';
-  const langFilter   = req.query.lang ?? ''; // 'nl' | 'en' | 'none'
+  const langFilter   = req.query.lang ?? '';
   const lockedOnly   = req.query.locked === '1';
   const deletedOnly  = req.query.deleted === '1';
   const page         = Math.max(1, parseInt(req.query.page ?? '1', 10));
   const deletedFlash = req.query.deleted_flash === '1';
+  const sortCol      = ['title','author','language','updated_at'].includes(req.query.sort) ? req.query.sort : 'updated_at';
+  const sortDir      = req.query.dir === 'asc' ? 'ASC' : 'DESC';
   const offset     = (page - 1) * PER_PAGE;
   const db         = getDb();
 
@@ -47,7 +49,7 @@ router.get('/books', (req, res) => {
 
   const siteUrl  = process.env.SITE_URL ?? 'https://top-boeken.nl';
   const total    = db.prepare(`SELECT COUNT(*) as c FROM books ${where}`).get(...args).c;
-  const books    = db.prepare(`SELECT * FROM books ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`).all(...args, PER_PAGE, offset);
+  const books    = db.prepare(`SELECT * FROM books ${where} ORDER BY ${sortCol} ${sortDir} LIMIT ? OFFSET ?`).all(...args, PER_PAGE, offset);
 
   const bookIds = books.map(b => b.id);
   const sourcesMap = {};
@@ -109,11 +111,22 @@ router.get('/books', (req, res) => {
   }).join('');
 
   function activeFilters() {
-    return { ...(q ? { q } : {}), ...(noCover ? { no_cover: '1' } : {}), ...(langFilter ? { lang: langFilter } : {}), ...(lockedOnly ? { locked: '1' } : {}) };
+    return { ...(q ? { q } : {}), ...(noCover ? { no_cover: '1' } : {}), ...(langFilter ? { lang: langFilter } : {}), ...(lockedOnly ? { locked: '1' } : {}), ...(deletedOnly ? { deleted: '1' } : {}) };
+  }
+
+  function sortUrl(col) {
+    const dir = sortCol === col && sortDir === 'DESC' ? 'asc' : 'desc';
+    return `/admin/books?${new URLSearchParams({ ...activeFilters(), sort: col, dir })}`;
+  }
+
+  function sortTh(label, col) {
+    const active = sortCol === col;
+    const arrow  = active ? (sortDir === 'DESC' ? ' ↓' : ' ↑') : '';
+    return `<th><a href="${sortUrl(col)}" style="color:${active ? '#232323' : '#aaa'};text-decoration:none;font-weight:${active ? '700' : '600'}">${label}${arrow}</a></th>`;
   }
 
   function pageUrl(p) {
-    return `/admin/books?${new URLSearchParams({ ...activeFilters(), page: p })}`;
+    return `/admin/books?${new URLSearchParams({ ...activeFilters(), sort: sortCol, dir: sortDir.toLowerCase(), page: p })}`;
   }
 
   function pageBtn(p, label, disabled = false, active = false) {
@@ -165,7 +178,7 @@ router.get('/books', (req, res) => {
       ${filterBtn('🗑 Verwijderd (' + counts.deleted + ')', { deleted: '1' }, deletedOnly)}
     </div>
     <table>
-      <thead><tr><th>Titel</th><th>Auteur</th><th>Taal</th><th>Bronnen</th><th>Bijgewerkt</th><th></th></tr></thead>
+      <thead><tr>${sortTh('Titel','title')}${sortTh('Auteur','author')}<th>Taal</th><th>Bronnen</th>${sortTh('Bijgewerkt','updated_at')}<th></th></tr></thead>
       <tbody>${rows || '<tr><td colspan="6" style="color:#aaa">Geen boeken gevonden</td></tr>'}</tbody>
     </table>
     ${pagination}
@@ -199,90 +212,118 @@ router.get('/books/:id', (req, res) => {
     : req.query.error
     ? `<div class="flash flash-err">${req.query.error}</div>`
     : '';
-  const currentCover = book.cover_path
-    ? `<img id="cover-preview" src="/${book.cover_path}" style="height:160px;object-fit:contain;display:block;margin-bottom:8px;background:#f5f4f1;padding:4px">`
-    : `<div id="cover-preview" style="height:160px;width:112px;background:#f5f4f1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#aaa;margin-bottom:8px">Geen cover</div>`;
+  const coverImg = book.cover_path
+    ? `<img src="/${book.cover_path}" style="width:100%;object-fit:contain;display:block;background:#f5f4f1;padding:4px">`
+    : `<div style="width:100%;aspect-ratio:7/10;background:#f5f4f1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#aaa">Geen cover</div>`;
 
   res.send(layout(`Bewerk — ${book.title}`, `
-    <h1>Boek bewerken</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h1 style="margin:0">Boek bewerken</h1>
+      <a href="/admin/books" class="btn" style="background:#eee;color:#333">← Terug</a>
+    </div>
     ${flash}
-    <form method="post" action="/admin/books/${book.id}" enctype="multipart/form-data" style="max-width:720px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px">
-        <div><label>Titel</label><input type="text" name="title" value="${book.title}" style="width:100%"></div>
-        <div><label>Auteur</label><input type="text" name="author" value="${book.author}" style="width:100%"></div>
-        <div><label>ISBN</label><input type="text" name="isbn" value="${book.isbn ?? ''}" style="width:100%"></div>
-        <div><label>Uitgever</label><input type="text" name="publisher" value="${book.publisher ?? ''}" style="width:100%"></div>
-        <div><label>Pagina's</label><input type="number" name="pages" value="${book.pages ?? ''}" style="width:100%"></div>
-        <div><label>Taal</label><input type="text" name="language" value="${book.language ?? ''}" placeholder="nl, en…" style="width:100%"></div>
-        <div><label>Goodreads rating</label><input type="number" name="goodreads_rating" step="0.01" min="0" max="5" value="${book.goodreads_rating ?? ''}" style="width:100%"></div>
-        <div><label>Goodreads stemmen</label><input type="number" name="goodreads_count" value="${book.goodreads_count ?? ''}" style="width:100%"></div>
-      </div>
-      <label>Engelse omschrijving</label><textarea name="summary" rows="4">${book.summary ?? ''}</textarea>
-      <label>Nederlandse omschrijving</label><textarea name="summary_nl" rows="4">${book.summary_nl ?? ''}</textarea>
-      <label>Cover</label>
-      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:8px">
-        ${currentCover}
-        <form method="post" action="/admin/books/${book.id}/redownload-cover" style="margin:0;padding-top:4px">
-          <button class="btn" type="submit" style="font-size:12px;padding:4px 10px;white-space:nowrap">🔄 Opnieuw ophalen</button>
-        </form>
-      </div>
+    <form method="post" action="/admin/books/${book.id}" enctype="multipart/form-data">
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:32px;align-items:start">
 
-      <label style="margin-bottom:4px">Bestand uploaden</label>
-      <input type="file" name="cover" accept="image/*" style="margin-bottom:12px" id="cover-input">
+        <!-- LEFT: text fields -->
+        <div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+            <div><label>Titel</label><input type="text" name="title" value="${book.title}" style="width:100%"></div>
+            <div><label>Auteur</label><input type="text" name="author" value="${book.author}" style="width:100%"></div>
+            <div><label>ISBN</label><input type="text" name="isbn" value="${book.isbn ?? ''}" style="width:100%"></div>
+            <div><label>Uitgever</label><input type="text" name="publisher" value="${book.publisher ?? ''}" style="width:100%"></div>
+            <div><label>Pagina's</label><input type="number" name="pages" value="${book.pages ?? ''}" style="width:100%"></div>
+            <div><label>Taal</label><input type="text" name="language" value="${book.language ?? ''}" placeholder="nl, en…" style="width:100%"></div>
+            <div><label>Goodreads rating</label><input type="number" name="goodreads_rating" step="0.01" min="0" max="5" value="${book.goodreads_rating ?? ''}" style="width:100%"></div>
+            <div><label>Goodreads stemmen</label><input type="number" name="goodreads_count" value="${book.goodreads_count ?? ''}" style="width:100%"></div>
+          </div>
+          <label>Engelse omschrijving</label>
+          <textarea name="summary" rows="5">${book.summary ?? ''}</textarea>
+          <label>Nederlandse omschrijving</label>
+          <textarea name="summary_nl" rows="5">${book.summary_nl ?? ''}</textarea>
+        </div>
 
-      <label style="margin-bottom:4px">Of: URL van afbeelding</label>
-      <div style="display:flex;gap:8px;margin-bottom:4px">
-        <input type="text" name="cover_url" id="cover-url-input" placeholder="https://..." style="margin-bottom:0;flex:1">
-        <button type="button" onclick="previewUrl()" class="btn" style="background:#eee;color:#333;white-space:nowrap">Voorbeeld</button>
+        <!-- RIGHT: cover + genres + actions -->
+        <div>
+          <label>Cover</label>
+          <div id="cover-preview-wrap" style="margin-bottom:8px;background:#f5f4f1">
+            ${coverImg}
+          </div>
+          <button type="button" id="redownload-btn" class="btn" style="width:100%;font-size:12px;margin-bottom:12px">
+            🔄 Opnieuw ophalen
+          </button>
+
+          <label style="margin-bottom:4px">Bestand uploaden</label>
+          <input type="file" name="cover" accept="image/*" id="cover-input" style="margin-bottom:8px">
+
+          <label style="margin-bottom:4px">Of: URL</label>
+          <div style="display:flex;gap:6px;margin-bottom:4px">
+            <input type="text" name="cover_url" id="cover-url-input" placeholder="https://…" style="margin-bottom:0;flex:1;min-width:0">
+            <button type="button" onclick="previewUrl()" class="btn" style="background:#eee;color:#333;white-space:nowrap;padding:6px 10px">👁</button>
+          </div>
+          <p style="font-size:11px;color:#aaa;margin-bottom:16px">Upload heeft voorrang op URL.</p>
+
+          <label style="margin-bottom:8px">Genres</label>
+          <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:4px">
+            ${genres.map(g => `
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;cursor:pointer">
+                <input type="checkbox" name="genres" value="${g.id}" ${activeSlugs.includes(g.slug) ? 'checked' : ''}> ${g.name_nl}
+              </label>`).join('')}
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary" type="submit" style="width:100%">Opslaan</button>
+            <div style="display:flex;gap:8px">
+              <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer;font-weight:400;font-size:13px">
+                <input type="checkbox" name="locked" value="1" ${book.locked ? 'checked' : ''}> 🔒 Vergrendeld
+              </label>
+              <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer;font-weight:400;font-size:13px">
+                <input type="checkbox" name="is_ebook" value="1" ${book.is_ebook ? 'checked' : ''}> 📱 E-book
+              </label>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <a href="/admin/books/${book.id}/merge" class="btn" style="font-size:12px;background:#fefce8;color:#854d0e;border-color:#fde68a">⇄ Samenvoegen</a>
+              <button type="button" id="delete-btn" class="btn" style="font-size:12px;${book.deleted ? 'background:#dcfce7;color:#166534;border-color:#bbf7d0' : 'color:#dc2626;border-color:#fecaca'}">
+                ${book.deleted ? '↩ Herstel' : '🗑 Verwijder'}
+              </button>
+              <a href="${siteUrl}/boeken/${book.slug}" target="_blank" class="btn" style="font-size:12px;background:#f0fdf4;color:#166534;border-color:#bbf7d0">👁 Site</a>
+            </div>
+          </div>
+        </div>
       </div>
-      <p style="font-size:12px;color:#888;margin-bottom:16px">Bestand upload heeft voorrang op URL. Laat beide leeg om huidige te bewaren.</p>
 
       <script>
         document.getElementById('cover-input').addEventListener('change', function() {
-          const file = this.files[0];
-          if (!file) return;
-          const url = URL.createObjectURL(file);
-          setPreview(url);
-          document.getElementById('cover-url-input').value = '';
+          if (this.files[0]) {
+            setPreview(URL.createObjectURL(this.files[0]));
+            document.getElementById('cover-url-input').value = '';
+          }
         });
-
         function previewUrl() {
           const url = document.getElementById('cover-url-input').value.trim();
           if (url) setPreview(url);
         }
-
         document.getElementById('cover-url-input').addEventListener('keydown', function(e) {
           if (e.key === 'Enter') { e.preventDefault(); previewUrl(); }
         });
-
         function setPreview(src) {
-          const el = document.getElementById('cover-preview');
-          el.outerHTML = '<img id="cover-preview" src="' + src + '" style="height:160px;object-fit:contain;display:block;margin-bottom:8px;background:#f5f4f1;padding:4px" onerror="this.style.outline=\'2px solid red\'">';
+          document.getElementById('cover-preview-wrap').innerHTML =
+            '<img src="' + src + '" style="width:100%;object-fit:contain;display:block;background:#f5f4f1;padding:4px" onerror="this.style.outline=\'2px solid red\'">';
         }
+        document.getElementById('redownload-btn').addEventListener('click', async function() {
+          this.disabled = true; this.textContent = '⏳ Bezig…';
+          const r = await fetch('/admin/books/${book.id}/redownload-cover', { method: 'POST' }).catch(() => null);
+          if (r?.ok) location.reload(); else { this.disabled = false; this.textContent = '🔄 Opnieuw ophalen'; }
+        });
+        document.getElementById('delete-btn').addEventListener('click', async function() {
+          const isDel = ${book.deleted ? 'true' : 'false'};
+          const msg = isDel ? 'Boek herstellen?' : '${book.title.replace(/'/g, "\\'")} verwijderen?';
+          if (!confirm(msg)) return;
+          const url = isDel ? '/admin/books/${book.id}/restore' : '/admin/books/${book.id}/delete';
+          const r = await fetch(url, { method: 'POST' }).catch(() => null);
+          if (r) location.href = r.url || '/admin/books/${book.id}';
+        });
       </script>
-      <label style="margin-bottom:8px">Genres</label>
-      <div style="margin-bottom:16px">${checkboxes}</div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
-        <button class="btn btn-primary" type="submit">Opslaan</button>
-        <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-weight:400">
-          <input type="checkbox" name="locked" value="1" ${book.locked ? 'checked' : ''}> 🔒 Vergrendeld
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-weight:400">
-          <input type="checkbox" name="is_ebook" value="1" ${book.is_ebook ? 'checked' : ''}> 📱 E-book
-        </label>
-        <a href="/admin/books" class="btn" style="background:#eee;color:#333">Annuleren</a>
-        <a href="/admin/books/${book.id}/merge" class="btn" style="background:#fefce8;color:#854d0e;border:1.5px solid #fde68a">⇄ Samenvoegen</a>
-        ${book.deleted
-          ? `<form method="post" action="/admin/books/${book.id}/restore" style="margin:0">
-               <button class="btn" style="background:#dcfce7;color:#166534;border:1.5px solid #bbf7d0" type="submit">↩ Herstel</button>
-             </form>`
-          : `<form method="post" action="/admin/books/${book.id}/delete" style="margin:0"
-               onsubmit="return confirm('${book.title} markeren als verwijderd?')">
-               <button class="btn" style="color:#dc2626;border-color:#fecaca" type="submit">🗑 Verwijder</button>
-             </form>`
-        }
-        <a href="${siteUrl}/boeken/${book.slug}" target="_blank" class="btn" style="background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;margin-left:auto">👁 Bekijk op site →</a>
-      </div>
     </form>
   `));
 });
