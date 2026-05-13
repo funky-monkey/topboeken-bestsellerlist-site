@@ -244,3 +244,32 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+.list-tag-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.list-tag-count {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  background: #e5e5e5;
+  color: #555;
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+
+.list-tag-weeks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-left: 2px;
+}
+
+.list-tag-weeks span {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  color: #999;
+}

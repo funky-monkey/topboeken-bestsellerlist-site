@@ -73,13 +73,18 @@ export function getFullListForSource(sourceSlug, limit = 500) {
 
 export function getListsForBook(bookId) {
   return getDb().prepare(`
-    SELECT s.name, s.slug, s.accent_color, MIN(le.rank) as rank, le.list_name
+    SELECT s.name, s.slug, s.accent_color, MIN(le.rank) as rank, le.list_name,
+           COUNT(*) as week_count,
+           GROUP_CONCAT(le.week_date) as weeks
     FROM list_entries le
     JOIN sources s ON s.id = le.source_id
     WHERE le.book_id = ?
     GROUP BY s.id, le.list_name
     ORDER BY rank ASC
-  `).all(bookId);
+  `).all(bookId).map(row => ({
+    ...row,
+    weeks: row.weeks ? row.weeks.split(',').sort().reverse() : [],
+  }));
 }
 
 export function getAffiliatesForBook(bookId) {

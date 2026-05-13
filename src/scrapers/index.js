@@ -49,29 +49,22 @@ async function run() {
             ? db.prepare('SELECT id FROM books WHERE isbn = ?').get(entry.isbn)
             : null;
 
-          let bookData;
           if (existing) {
             updated++;
-            bookData = existing;
-          } else {
-            bookData = await enrichBook({ title: entry.title, author: entry.author, isbn: entry.isbn ?? null, summary: entry.summary ?? null, coverImageUrl: entry.coverImageUrl ?? null });
-            if (!bookData) { console.warn(`  Could not resolve ISBN for: ${entry.title}`); continue; }
-            added++;
+            upsertListEntry({ book_id: existing.id, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
+            continue;
           }
 
-          const bookId = existing ? existing.id : upsertBook(bookData);
+          const bookData = await enrichBook({ title: entry.title, author: entry.author, isbn: entry.isbn ?? null, summary: entry.summary ?? null, coverImageUrl: entry.coverImageUrl ?? null });
+          if (!bookData) { console.warn(`  Could not resolve ISBN for: ${entry.title}`); continue; }
+          added++;
 
-          // Populate genres from enrichment
-          if (bookData.genreSlugs?.length) {
-            upsertBookGenres(bookId, bookData.genreSlugs);
-          }
-
+          const bookId = upsertBook(bookData);
+          if (bookData.genreSlugs?.length) upsertBookGenres(bookId, bookData.genreSlugs);
           upsertListEntry({ book_id: bookId, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
-          const title  = bookData.title  ?? entry.title;
-          const author = bookData.author ?? entry.author;
+
           const isbn = bookData.isbn ?? entry.isbn;
           upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'amazon-nl', url: amazonUrl(isbn) });
-          // bol.com: try to get direct product URL, fall back to search
           const bolLink = await bolUrl(isbn);
           upsertBookAffiliate({ book_id: bookId, affiliate_slug: 'bol-com', url: bolLink });
         } catch (bookErr) {

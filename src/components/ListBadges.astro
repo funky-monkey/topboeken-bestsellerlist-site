@@ -1,6 +1,11 @@
 ---
 import '../styles/detail.css';
 const { lists } = Astro.props;
+
+function formatWeek(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+}
 ---
 <div class="lists-on">
   <h2 class="lists-on-heading">
@@ -8,10 +13,20 @@ const { lists } = Astro.props;
   </h2>
   <div class="list-tags">
     {lists.map(l => (
-      <a href={`/lijsten/${l.slug}`} class="list-tag">
-        <span class="list-tag-dot" style={`background:${l.accent_color}`}></span>
-        {l.name}&nbsp;·&nbsp;<strong>#{l.rank}</strong>
-      </a>
+      <div class="list-tag-wrap">
+        <a href={`/lijsten/${l.slug}`} class="list-tag">
+          <span class="list-tag-dot" style={`background:${l.accent_color}`}></span>
+          {l.name}&nbsp;·&nbsp;<strong>#{l.rank}</strong>
+          {l.week_count > 1 && (
+            <span class="list-tag-count">{l.week_count}×</span>
+          )}
+        </a>
+        {l.week_count > 1 && (
+          <div class="list-tag-weeks">
+            {l.weeks.map(w => <span>{formatWeek(w)}</span>)}
+          </div>
+        )}
+      </div>
     ))}
   </div>
 </div>
