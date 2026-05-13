@@ -73,11 +73,12 @@ export function getFullListForSource(sourceSlug, limit = 500) {
 
 export function getListsForBook(bookId) {
   return getDb().prepare(`
-    SELECT s.name, s.slug, s.accent_color, le.rank, le.list_name
+    SELECT s.name, s.slug, s.accent_color, MIN(le.rank) as rank, le.list_name
     FROM list_entries le
     JOIN sources s ON s.id = le.source_id
     WHERE le.book_id = ?
-    ORDER BY le.rank ASC
+    GROUP BY s.id, le.list_name
+    ORDER BY rank ASC
   `).all(bookId);
 }
 
