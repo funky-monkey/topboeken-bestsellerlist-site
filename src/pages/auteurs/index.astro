@@ -3,8 +3,8 @@ import Base from '../../layouts/Base.astro';
 import { getAuthorsGrouped } from '../../lib/authors.js';
 import '../../styles/author.css';
 
-const groups = getAuthorsGrouped();
-const total  = groups.reduce((n, g) => n + g.authors.length, 0);
+const { dutch, intl, totalDutch, totalIntl } = getAuthorsGrouped();
+const total = totalDutch + totalIntl;
 ---
 <Base
   title="Auteurs A–Z — TopBoeken"
@@ -16,20 +16,45 @@ const total  = groups.reduce((n, g) => n + g.authors.length, 0);
     <p class="az-subtitle">{total} auteurs</p>
   </div>
 
-  <div class="az-columns">
-    {groups.map(({ letter, authors }) => (
-      <div class="az-group">
-        <div class="az-letter">{letter}</div>
-        <ul class="az-list">
-          {authors.map(a => (
-            <li>
-              <a href={`/auteurs/${a.slug}`} class="az-link">
-                {a.flag && <span class="az-flag">{a.flag}</span>}{a.name}{a.book_count > 1 && <span class="az-count"> ({a.book_count})</span>}
-              </a>
-            </li>
-          ))}
-        </ul>
+  {dutch.length > 0 && (
+    <section class="az-section">
+      <h2 class="az-section-heading">Nederlandse auteurs <span class="az-section-count">({totalDutch})</span></h2>
+      <div class="az-columns">
+        {dutch.map(({ letter, authors }) => (
+          <div class="az-group">
+            <div class="az-letter">{letter}</div>
+            <ul class="az-list">
+              {authors.map(a => (
+                <li>
+                  <a href={`/auteurs/${a.slug}`} class="az-link">
+                    {a.name}{a.book_count > 1 && <span class="az-count"> ({a.book_count})</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
+    </section>
+  )}
+
+  <section class="az-section">
+    <h2 class="az-section-heading">Internationale auteurs <span class="az-section-count">({totalIntl})</span></h2>
+    <div class="az-columns">
+      {intl.map(({ letter, authors }) => (
+        <div class="az-group">
+          <div class="az-letter">{letter}</div>
+          <ul class="az-list">
+            {authors.map(a => (
+              <li>
+                <a href={`/auteurs/${a.slug}`} class="az-link">
+                  {a.name}{a.book_count > 1 && <span class="az-count"> ({a.book_count})</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
 </Base>

@@ -19,12 +19,7 @@ export function getAuthorsGrouped() {
     ORDER BY b.author COLLATE NOCASE
   `).all();
 
-  const flagFor = (r) => {
-    if (!r.lang_known) return '';
-    if (r.nl_count > 0 && r.nl_count >= r.en_count) return '🇳🇱';
-    if (r.en_count > 0) return '🇬🇧';
-    return '';
-  };
+  const isDutch = (r) => r.lang_known > 0 && r.nl_count > 0 && r.nl_count >= r.en_count;
 
   // Deduplicate by slug, keeping highest book_count
   const slugMap = new Map();
@@ -33,21 +28,27 @@ export function getAuthorsGrouped() {
     if (!slug) continue;
     const prev = slugMap.get(slug);
     if (!prev || r.book_count > prev.book_count) {
-      slugMap.set(slug, { name: r.author, slug, book_count: r.book_count, flag: flagFor(r) });
+      slugMap.set(slug, { name: r.author, slug, book_count: r.book_count, dutch: isDutch(r) });
     }
   }
 
-  // Group by first letter
-  const groups = {};
-  for (const entry of slugMap.values()) {
-    const letter = firstLetter(entry.name);
-    if (!groups[letter]) groups[letter] = [];
-    groups[letter].push(entry);
+  function buildGroups(entries) {
+    const groups = {};
+    for (const entry of entries) {
+      const letter = firstLetter(entry.name);
+      if (!groups[letter]) groups[letter] = [];
+      groups[letter].push(entry);
+    }
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([letter, authors]) => ({ letter, authors: authors.sort((a, b) => a.name.localeCompare(b.name)) }));
   }
 
-  return Object.entries(groups)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([letter, authors]) => ({ letter, authors: authors.sort((a, b) => a.name.localeCompare(b.name)) }));
+  const all     = [...slugMap.values()];
+  const dutch   = buildGroups(all.filter(a => a.dutch));
+  const intl    = buildGroups(all.filter(a => !a.dutch));
+
+  return { dutch, intl, totalDutch: all.filter(a => a.dutch).length, totalIntl: all.filter(a => !a.dutch).length };
 }
 
 export function getAllAuthorSlugs() {

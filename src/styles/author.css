@@ -89,6 +89,26 @@
   margin-bottom: 36px;
 }
 
+.az-section {
+  margin-bottom: 56px;
+}
+
+.az-section-heading {
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+.az-section-count {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #aaa;
+}
+
 .az-title {
   font-size: 40px;
   font-weight: 400;
@@ -144,11 +164,6 @@
 .az-link:hover {
   color: var(--text);
   text-decoration: underline;
-}
-
-.az-flag {
-  font-size: 11px;
-  margin-right: 3px;
 }
 
 .az-count {
