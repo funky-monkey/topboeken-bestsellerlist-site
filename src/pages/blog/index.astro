@@ -1,0 +1,33 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getAllArticles } from '../../lib/articles.js';
+import '../../styles/article.css';
+
+const articles = getAllArticles({ publishedOnly: true });
+
+function formatDate(str) {
+  if (!str) return '';
+  return new Date(str).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+---
+<Base
+  title="Blog — TopBoeken"
+  description="Leeslijsten en artikelen over boeken van de TopBoeken redactie."
+  canonical="https://top-boeken.nl/blog"
+>
+  <div class="blog-list">
+    <h1>Blog <span class="sans">&amp; Lijsten</span></h1>
+    {articles.length === 0 && (
+      <p style="color:#aaa">Nog geen artikelen gepubliceerd.</p>
+    )}
+    {articles.map(a => (
+      <div class="blog-card">
+        <a href={`/blog/${a.slug}`} class="blog-card-title">{a.title}</a>
+        {a.intro && <p class="blog-card-intro">{a.intro}</p>}
+        <span class="blog-card-meta">
+          {a.book_count} boeken &nbsp;·&nbsp; {formatDate(a.published_at ?? a.created_at)}
+        </span>
+      </div>
+    ))}
+  </div>
+</Base>

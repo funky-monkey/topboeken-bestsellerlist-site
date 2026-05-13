@@ -12,6 +12,7 @@ import scrapeRoutes        from './routes/scrape.js';
 import rebuildRoutes       from './routes/rebuild.js';
 import authStatusRoutes    from './routes/auth-status.js';
 import enrichCoversRoutes  from './routes/enrich-covers.js';
+import articlesRoutes      from './routes/articles.js';
 
 const app  = express();
 const PORT = process.env.PORT ?? 3001;
@@ -37,6 +38,7 @@ app.use('/admin', requireAuth, affiliatesRoutes);
 app.use('/admin', requireAuth, logsRoutes);
 app.use('/admin', requireAuth, scrapeRoutes);
 app.use('/admin', requireAuth, enrichCoversRoutes);
+app.use('/admin', requireAuth, articlesRoutes);
 
 // API routes — auth-status is public (no requireAuth), rebuild is protected
 app.use('/api', authStatusRoutes);

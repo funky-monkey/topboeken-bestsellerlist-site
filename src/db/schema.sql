@@ -82,8 +82,31 @@ CREATE TABLE IF NOT EXISTS scrape_log (
   error_msg     TEXT
 );
 
+CREATE TABLE IF NOT EXISTS articles (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  title        TEXT    NOT NULL,
+  slug         TEXT    NOT NULL UNIQUE,
+  intro        TEXT,
+  outro        TEXT,
+  published    INTEGER NOT NULL DEFAULT 0,
+  published_at TEXT,
+  created_at   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
+  updated_at   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS article_books (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id  INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+  book_id     INTEGER NOT NULL REFERENCES books(id)    ON DELETE CASCADE,
+  description TEXT,
+  position    INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(article_id, book_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_list_entries_source ON list_entries(source_id, week_date);
 CREATE INDEX IF NOT EXISTS idx_list_entries_book   ON list_entries(book_id);
 CREATE INDEX IF NOT EXISTS idx_list_entries_genre  ON list_entries(genre_id);
 CREATE INDEX IF NOT EXISTS idx_book_affiliates_book ON book_affiliates(book_id);
 CREATE INDEX IF NOT EXISTS idx_books_slug           ON books(slug);
+CREATE INDEX IF NOT EXISTS idx_articles_slug        ON articles(slug);
+CREATE INDEX IF NOT EXISTS idx_article_books_article ON article_books(article_id, position);

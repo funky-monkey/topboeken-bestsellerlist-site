@@ -14,6 +14,7 @@ export function layout(title, body) {
     <a href="/admin/books">Boeken</a>
     <a href="/admin/sources">Bronnen</a>
     <a href="/admin/affiliates">Affiliates</a>
+    <a href="/admin/articles">Artikelen</a>
     <a href="/admin/logs">Logs</a>
     <a href="/admin/scrape">Scrapen</a>
     <span class="nav-end"><a href="/admin/logout">Uitloggen</a></span>
