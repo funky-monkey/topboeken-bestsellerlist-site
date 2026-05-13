@@ -138,38 +138,22 @@
   font-size: 13px;
   color: #444;
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
   line-height: 1.4;
 }
 
 .az-link:hover {
   color: var(--text);
-}
-
-.az-link:hover .az-name {
   text-decoration: underline;
-}
-
-.az-name {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
 }
 
 .az-flag {
   font-size: 11px;
-  flex-shrink: 0;
+  margin-right: 3px;
 }
 
 .az-count {
-  font-size: 10px;
-  color: #ccc;
-  font-weight: 600;
-  flex-shrink: 0;
+  color: #bbb;
+  font-size: 12px;
 }
 
 @media (max-width: 1024px) {
