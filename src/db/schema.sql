@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS authors (
   death_date  TEXT,
   photo_path  TEXT,
   ol_key      TEXT,
+  is_dutch    INTEGER,
   updated_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 

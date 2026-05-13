@@ -23,6 +23,7 @@ const MIGRATIONS = [
   "ALTER TABLE books ADD COLUMN is_ebook INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE books ADD COLUMN deleted  INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE authors ADD COLUMN ol_key TEXT",
+  "ALTER TABLE authors ADD COLUMN is_dutch INTEGER",
 ];
 
 export function initSchema() {

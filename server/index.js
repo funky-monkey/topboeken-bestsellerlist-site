@@ -16,6 +16,7 @@ import enrichCoversRoutes  from './routes/enrich-covers.js';
 import articlesRoutes      from './routes/articles.js';
 import translateRoutes     from './routes/translate.js';
 import enrichAuthorsRoutes from './routes/enrich-authors.js';
+import adminAuthorsRoutes  from './routes/authors.js';
 
 initSchema();
 
@@ -46,6 +47,7 @@ app.use('/admin', requireAuth, enrichCoversRoutes);
 app.use('/admin', requireAuth, articlesRoutes);
 app.use('/admin', requireAuth, translateRoutes);
 app.use('/admin', requireAuth, enrichAuthorsRoutes);
+app.use('/admin', requireAuth, adminAuthorsRoutes);
 
 // API routes — auth-status is public (no requireAuth), rebuild is protected
 app.use('/api', authStatusRoutes);

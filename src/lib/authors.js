@@ -19,7 +19,17 @@ export function getAuthorsGrouped() {
     ORDER BY b.author COLLATE NOCASE
   `).all();
 
-  const isDutch = (r) => r.lang_known > 0 && r.nl_count > 0 && r.nl_count >= r.en_count;
+  // Manual override in authors table takes precedence over language detection
+  const authorOverrides = new Map(
+    db.prepare('SELECT slug, is_dutch FROM authors WHERE is_dutch IS NOT NULL').all()
+      .map(a => [a.slug, a.is_dutch])
+  );
+
+  const isDutch = (r) => {
+    const slug = textSlug(r.author);
+    if (authorOverrides.has(slug)) return authorOverrides.get(slug) === 1;
+    return r.lang_known > 0 && r.nl_count > 0 && r.nl_count >= r.en_count;
+  };
 
   // Deduplicate by slug, keeping highest book_count
   const slugMap = new Map();
