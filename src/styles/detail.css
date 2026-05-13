@@ -13,7 +13,7 @@
 .detail-cover-col {
   background: #eeecea;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 56px 44px;
 }
