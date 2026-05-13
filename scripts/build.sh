@@ -4,8 +4,11 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WWW_DIR="/var/www/top-boeken.nl/html"
 
-echo "Building Astro..."
+echo "Applying schema migrations..."
 cd "$APP_DIR"
+node scripts/migrate.js
+
+echo "Building Astro..."
 npm run build
 
 echo "Deploying to $WWW_DIR..."
