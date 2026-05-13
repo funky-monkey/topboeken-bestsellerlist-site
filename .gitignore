@@ -8,3 +8,5 @@ dist/
 dist-next/
 .astro/
 logs/
+*.sqlite-shm
+*.sqlite-wal
