@@ -37,7 +37,7 @@ async function run() {
     const source = db.prepare('SELECT * FROM sources WHERE slug = ? AND active = 1').get(slug);
     if (!source) { console.log(`Skipping inactive source: ${slug}`); continue; }
 
-    const logId = db.prepare("INSERT INTO scrape_log (source_id, started_at) VALUES (?, datetime('now'))").run(source.id).lastInsertRowid;
+    const logId = db.prepare("INSERT INTO scrape_log (source_id, started_at) VALUES (?, datetime('now', 'localtime'))").run(source.id).lastInsertRowid;
     let added = 0, updated = 0;
 
     try {
@@ -81,10 +81,10 @@ async function run() {
         }
       }
 
-      db.prepare("UPDATE scrape_log SET finished_at=datetime('now'), books_added=?, books_updated=?, status='ok' WHERE id=?").run(added, updated, logId);
+      db.prepare("UPDATE scrape_log SET finished_at=datetime('now', 'localtime'), books_added=?, books_updated=?, status='ok' WHERE id=?").run(added, updated, logId);
       console.log(`  ✓ Done (added: ${added}, updated: ${updated})`);
     } catch (err) {
-      db.prepare("UPDATE scrape_log SET finished_at=datetime('now'), status='error', error_msg=? WHERE id=?").run(err.message, logId);
+      db.prepare("UPDATE scrape_log SET finished_at=datetime('now', 'localtime'), status='error', error_msg=? WHERE id=?").run(err.message, logId);
       console.error(`  ✗ Error in ${slug}: ${err.message}`);
     }
   }

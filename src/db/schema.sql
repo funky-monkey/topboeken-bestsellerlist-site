@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS books (
   goodreads_rating REAL,
   goodreads_count  INTEGER,
   slug             TEXT    NOT NULL UNIQUE,
-  created_at       TEXT    NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT    NOT NULL DEFAULT (datetime('now'))
+  created_at       TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
+  updated_at       TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 
 CREATE TABLE IF NOT EXISTS book_genres (
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS list_entries (
   rank       INTEGER NOT NULL,
   list_name  TEXT    NOT NULL,
   week_date  TEXT    NOT NULL,
-  scraped_at TEXT    NOT NULL DEFAULT (datetime('now')),
+  scraped_at TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
   UNIQUE(book_id, source_id, list_name, week_date)
 );
 
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS book_affiliates (
   url          TEXT    NOT NULL,
   price        REAL,
   currency     TEXT    NOT NULL DEFAULT 'EUR',
-  updated_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
   UNIQUE(book_id, affiliate_id)
 );
 

@@ -30,7 +30,7 @@ export function upsertBook(book) {
       cover_path       = coalesce(excluded.cover_path,       cover_path),
       goodreads_rating = coalesce(excluded.goodreads_rating, goodreads_rating),
       goodreads_count  = coalesce(excluded.goodreads_count,  goodreads_count),
-      updated_at       = datetime('now')
+      updated_at       = datetime('now', 'localtime')
   `).run(book);
   return db.prepare('SELECT id FROM books WHERE isbn = ?').get(book.isbn).id;
 }
@@ -63,6 +63,6 @@ export function upsertBookAffiliate({ book_id, affiliate_slug, url }) {
     VALUES (?, ?, ?)
     ON CONFLICT(book_id, affiliate_id) DO UPDATE SET
       url        = excluded.url,
-      updated_at = datetime('now')
+      updated_at = datetime('now', 'localtime')
   `).run(book_id, affiliate.id, url);
 }

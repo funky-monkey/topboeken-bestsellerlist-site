@@ -232,7 +232,7 @@ router.post('/books/:id', upload.single('cover'), async (req, res) => {
     }
   }
 
-  db.prepare("UPDATE books SET title=?, author=?, summary=?, cover_path=?, updated_at=datetime('now') WHERE id=?")
+  db.prepare("UPDATE books SET title=?, author=?, summary=?, cover_path=?, updated_at=datetime('now', 'localtime') WHERE id=?")
     .run(title, author, summary || null, newCoverPath, id);
 
   db.prepare('DELETE FROM book_genres WHERE book_id=?').run(id);
