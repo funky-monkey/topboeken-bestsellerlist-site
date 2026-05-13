@@ -4,5 +4,5 @@ if (el) {
   const text = isNl
     ? (el.dataset.nl || el.dataset.en)
     : (el.dataset.en || el.dataset.nl);
-  if (text) el.textContent = text;
+  if (text) el.innerHTML = text.replace(/\n/g, '<br>');
 }

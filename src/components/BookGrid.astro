@@ -4,11 +4,11 @@ import BookCardBig from './BookCardBig.astro';
 import BookCard from './BookCard.astro';
 import NextButton from './NextButton.astro';
 
-const { books, accentColor, sourceSlug } = Astro.props;
+const { books, accentColor, sourceSlug, sourceName } = Astro.props;
 const [first, ...rest] = books;
 ---
 <div class="book-grid">
-  {first && <BookCardBig book={first} accentColor={accentColor} />}
-  {rest.map(b => <BookCard book={b} accentColor={accentColor} />)}
+  {first && <BookCardBig book={first} accentColor={accentColor} sourceName={sourceName} />}
+  {rest.map(b => <BookCard book={b} accentColor={accentColor} sourceName={sourceName} />)}
   <NextButton href={`/lijsten/${sourceSlug}`} />
 </div>

@@ -2,7 +2,7 @@
 import '../styles/book-card.css';
 import { starsFromRating } from '../lib/stars.js';
 
-const { book, accentColor = '#3b82f6' } = Astro.props;
+const { book, accentColor = '#3b82f6', sourceName } = Astro.props;
 const coverSrc = book.cover_path ? `/${book.cover_path}` : null;
 const stars = starsFromRating(book.goodreads_rating);
 ---
@@ -12,6 +12,7 @@ const stars = starsFromRating(book.goodreads_rating);
     : <div class="book-card-placeholder"></div>
   }
   <span class="rank-badge" style={`background:${accentColor};font-size:13px;padding:4px 10px`}>#1</span>
+  {sourceName && <span class="source-badge">{sourceName}</span>}
   <div class="book-hover">
     <div class="book-hover-panel">
       <div class="hover-title">{book.title}</div>

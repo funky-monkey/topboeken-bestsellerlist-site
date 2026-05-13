@@ -62,14 +62,13 @@ const [firstWord, ...restWords] = book.title.split(' ');
     </div>
 
     {(book.summary || book.summary_nl) && (
-      <p
+      <div
         id="book-summary"
         class="detail-summary"
         data-nl={book.summary_nl ?? ''}
         data-en={book.summary ?? ''}
-      >
-        {book.summary_nl || book.summary}
-      </p>
+        set:html={(book.summary_nl || book.summary || '').replace(/\n/g, '<br>')}
+      />
     )}
     <script src="/scripts/lang-description.js" is:inline></script>
 

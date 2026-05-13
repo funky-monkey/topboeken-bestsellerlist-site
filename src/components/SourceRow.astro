@@ -16,7 +16,7 @@ const flag = flagMap[source.country] ?? source.country;
     <a href={`/lijsten/${source.slug}`} class="source-more">Bekijk alle →</a>
   </div>
   {books.length > 0
-    ? <BookGrid books={books} accentColor={source.accent_color} sourceSlug={source.slug} />
+    ? <BookGrid books={books} accentColor={source.accent_color} sourceSlug={source.slug} sourceName={source.name} />
     : <p class="source-empty">Nog geen boeken beschikbaar voor deze bron.</p>
   }
 </section>

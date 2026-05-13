@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { join } from 'node:path';
-import { createWriteStream, mkdirSync, existsSync } from 'node:fs';
-import { pipeline } from 'node:stream/promises';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { getDb } from '../../src/db/db.js';
 import { layout } from '../views/layout.js';
 
@@ -35,19 +34,40 @@ router.get('/books', (req, res) => {
   const siteUrl    = process.env.SITE_URL ?? 'https://top-boeken.nl';
   const total      = db.prepare(`SELECT COUNT(*) as c FROM books ${where}`).get(...args).c;
   const books      = db.prepare(`SELECT * FROM books ${where} ORDER BY updated_at DESC LIMIT ? OFFSET ?`).all(...args, PER_PAGE, offset);
+
+  // Fetch sources per book in one query
+  const bookIds = books.map(b => b.id);
+  const sourcesMap = {};
+  if (bookIds.length) {
+    db.prepare(`
+      SELECT le.book_id, s.name, s.accent_color
+      FROM list_entries le JOIN sources s ON s.id = le.source_id
+      WHERE le.book_id IN (${bookIds.map(() => '?').join(',')})
+      GROUP BY le.book_id, s.id
+    `).all(...bookIds).forEach(r => {
+      if (!sourcesMap[r.book_id]) sourcesMap[r.book_id] = [];
+      sourcesMap[r.book_id].push(r);
+    });
+  }
   const totalPages = Math.ceil(total / PER_PAGE);
 
-  const rows = books.map(b => `
+  const rows = books.map(b => {
+    const sources = sourcesMap[b.id] ?? [];
+    const sourceBadges = sources.map(s =>
+      `<span style="display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;color:#fff;background:${s.accent_color};margin-right:3px;white-space:nowrap">${s.name}</span>`
+    ).join('');
+    return `
     <tr>
       <td>${b.cover_path ? `<img src="/${b.cover_path}" width="32" height="46" style="object-fit:contain;vertical-align:middle;background:#f5f4f1" onerror="this.style.display='none'">` : ''}&nbsp;${b.title}</td>
-      <td>${b.author}</td>
-      <td style="font-size:12px;color:#888">${b.isbn}</td>
+      <td style="font-size:13px;color:#555">${b.author}</td>
+      <td>${sourceBadges || '<span style="color:#ccc;font-size:12px">—</span>'}</td>
       <td style="font-size:12px;color:#888">${b.updated_at?.slice(0, 10) ?? ''}</td>
       <td style="white-space:nowrap">
         <a href="/admin/books/${b.id}" class="btn btn-primary" style="padding:4px 10px;font-size:12px">Bewerk</a>
         &nbsp;<a href="${siteUrl}/boeken/${b.slug}" target="_blank" class="btn" style="padding:4px 10px;font-size:12px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">👁</a>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   function pageUrl(p) {
     const params = new URLSearchParams({ ...(q ? { q } : {}), page: p });
@@ -91,7 +111,7 @@ router.get('/books', (req, res) => {
       <span style="color:#888;font-size:13px;margin-left:8px">${total} boeken${q ? ` voor "${q}"` : ''}</span>
     </form>
     <table>
-      <thead><tr><th>Titel</th><th>Auteur</th><th>ISBN</th><th>Bijgewerkt</th><th></th></tr></thead>
+      <thead><tr><th>Titel</th><th>Auteur</th><th>Bronnen</th><th>Bijgewerkt</th><th></th></tr></thead>
       <tbody>${rows || '<tr><td colspan="5" style="color:#aaa">Geen boeken gevonden</td></tr>'}</tbody>
     </table>
     ${pagination}
@@ -180,11 +200,12 @@ async function downloadCoverFromUrl(url, destPath) {
   const res = await fetch(url, { headers: { 'User-Agent': 'TopBoeken/1.0 (sidney@funky-monkey.nl)' } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const ct = res.headers.get('content-type') ?? '';
-  if (!ct.includes('image')) throw new Error(`Not an image (${ct})`);
+  if (!ct.includes('image')) throw new Error(`Geen afbeelding (${ct})`);
   const dir = join(destPath, '..');
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const stream = createWriteStream(destPath);
-  await pipeline(res.body, stream);
+  // Use arrayBuffer — works with Web Streams API from fetch()
+  const buffer = Buffer.from(await res.arrayBuffer());
+  writeFileSync(destPath, buffer);
 }
 
 router.post('/books/:id', upload.single('cover'), async (req, res) => {
@@ -218,6 +239,16 @@ router.post('/books/:id', upload.single('cover'), async (req, res) => {
   const insertGenre = db.prepare('INSERT OR IGNORE INTO book_genres (book_id, genre_id) VALUES (?,?)');
   const ids = Array.isArray(genres) ? genres : genres ? [genres] : [];
   db.transaction(() => ids.forEach(gid => insertGenre.run(id, parseInt(gid, 10))))();
+
+  // If cover changed (upload or URL), trigger an async rebuild so static pages update
+  if ((req.file || (cover_url?.trim() && !errorMsg)) && !errorMsg) {
+    const { spawn } = await import('node:child_process');
+    const { dirname, join: pjoin } = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const scriptPath = pjoin(dirname(fileURLToPath(import.meta.url)), '../../scripts/build.sh');
+    const child = spawn('bash', [scriptPath], { detached: true, stdio: 'ignore' });
+    child.unref();
+  }
 
   const qs = errorMsg
     ? `?error=${encodeURIComponent(errorMsg)}`
