@@ -26,3 +26,21 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 3px;
 }
+
+@media (max-width: 640px) {
+  .search-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .search-heading {
+    font-size: 22px;
+  }
+  .search-input {
+    max-width: 100%;
+    font-size: 16px;
+  }
+}
+@media (max-width: 440px) {
+  .search-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

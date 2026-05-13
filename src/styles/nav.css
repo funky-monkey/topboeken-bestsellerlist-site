@@ -53,3 +53,24 @@
 .nav-links a:hover {
   color: var(--text);
 }
+
+@media (max-width: 768px) {
+  .nav {
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 0;
+    margin-bottom: 20px;
+  }
+  .nav-right {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .nav-search {
+    width: 100%;
+  }
+  .nav-links {
+    justify-content: center;
+  }
+}

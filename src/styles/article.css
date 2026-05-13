@@ -212,3 +212,36 @@
   font-size: 12px;
   color: #aaa;
 }
+
+@media (max-width: 768px) {
+  .article-wrap,
+  .blog-list {
+    padding: 32px 20px 60px;
+  }
+  .article-title {
+    font-size: 30px;
+  }
+  .article-intro,
+  .article-outro {
+    font-size: 16px;
+  }
+}
+@media (max-width: 640px) {
+  .article-book {
+    grid-template-columns: 90px 1fr;
+    gap: 16px;
+  }
+  .article-book-cover img {
+    width: 90px;
+  }
+  .article-book-cover-placeholder {
+    width: 90px;
+  }
+  .article-book-title {
+    font-size: 18px;
+  }
+  .article-title {
+    font-size: 26px;
+    letter-spacing: -0.5px;
+  }
+}

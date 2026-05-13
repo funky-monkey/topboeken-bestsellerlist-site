@@ -55,3 +55,18 @@
   margin-left: 4px;
 }
 
+@media (max-width: 640px) {
+  .list-page-title {
+    font-size: 24px;
+  }
+  .sublist-title {
+    font-size: 17px;
+  }
+  .sublist-title .sans {
+    font-size: 19px;
+  }
+  .sublist-section {
+    margin-bottom: 36px;
+  }
+}
+

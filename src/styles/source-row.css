@@ -71,3 +71,19 @@
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
+
+@media (max-width: 640px) {
+  .book-grid,
+  .book-grid-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .source-section {
+    margin-bottom: 32px;
+  }
+}
+@media (max-width: 440px) {
+  .book-grid,
+  .book-grid-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

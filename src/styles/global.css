@@ -33,3 +33,10 @@ body {
   margin: 0 auto;
   padding: 0 var(--pad);
 }
+
+@media (max-width: 1024px) {
+  :root { --pad: 24px; }
+}
+@media (max-width: 640px) {
+  :root { --pad: 16px; }
+}
