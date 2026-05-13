@@ -110,7 +110,7 @@ router.get('/articles/:id', (req, res) => {
   res.send(layout(article.title, saved + articleForm(article, books)));
 });
 
-router.post('/articles/:id', (req, res) => {
+router.post('/articles/:id', async (req, res) => {
   const { title, intro, outro, status, scheduled_for } = req.body;
   const db = getDb();
   const prev = db.prepare('SELECT status FROM articles WHERE id = ?').get(req.params.id);
