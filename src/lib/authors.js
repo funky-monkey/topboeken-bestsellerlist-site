@@ -1,6 +1,44 @@
 import { getDb } from '../db/db.js';
 import { textSlug } from './slugify.js';
 
+function firstLetter(name) {
+  return name.trim().normalize('NFD').replace(/[̀-ͯ]/g, '').charAt(0).toUpperCase();
+}
+
+export function getAuthorsGrouped() {
+  const db    = getDb();
+  const rows  = db.prepare(`
+    SELECT b.author, COUNT(*) as book_count
+    FROM books b
+    WHERE b.deleted = 0 AND b.cover_path IS NOT NULL AND b.cover_path != ''
+    GROUP BY b.author
+    ORDER BY b.author COLLATE NOCASE
+  `).all();
+
+  // Deduplicate by slug, keeping highest book_count
+  const slugMap = new Map();
+  for (const r of rows) {
+    const slug = textSlug(r.author);
+    if (!slug) continue;
+    const prev = slugMap.get(slug);
+    if (!prev || r.book_count > prev.book_count) {
+      slugMap.set(slug, { name: r.author, slug, book_count: r.book_count });
+    }
+  }
+
+  // Group by first letter
+  const groups = {};
+  for (const entry of slugMap.values()) {
+    const letter = firstLetter(entry.name);
+    if (!groups[letter]) groups[letter] = [];
+    groups[letter].push(entry);
+  }
+
+  return Object.entries(groups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([letter, authors]) => ({ letter, authors: authors.sort((a, b) => a.name.localeCompare(b.name)) }));
+}
+
 export function getAllAuthorSlugs() {
   const db    = getDb();
   const books = db.prepare("SELECT DISTINCT author FROM books WHERE deleted=0 AND cover_path IS NOT NULL AND cover_path != ''").all();
