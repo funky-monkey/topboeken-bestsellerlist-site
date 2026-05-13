@@ -8,12 +8,23 @@ function firstLetter(name) {
 export function getAuthorsGrouped() {
   const db    = getDb();
   const rows  = db.prepare(`
-    SELECT b.author, COUNT(*) as book_count
+    SELECT b.author,
+           COUNT(*) as book_count,
+           SUM(CASE WHEN b.language LIKE 'nl%' THEN 1 ELSE 0 END) as nl_count,
+           SUM(CASE WHEN b.language LIKE 'en%' THEN 1 ELSE 0 END) as en_count,
+           SUM(CASE WHEN b.language IS NOT NULL THEN 1 ELSE 0 END) as lang_known
     FROM books b
     WHERE b.deleted = 0 AND b.cover_path IS NOT NULL AND b.cover_path != ''
     GROUP BY b.author
     ORDER BY b.author COLLATE NOCASE
   `).all();
+
+  const flagFor = (r) => {
+    if (!r.lang_known) return '';
+    if (r.nl_count > 0 && r.nl_count >= r.en_count) return '🇳🇱';
+    if (r.en_count > 0) return '🇬🇧';
+    return '';
+  };
 
   // Deduplicate by slug, keeping highest book_count
   const slugMap = new Map();
@@ -22,7 +33,7 @@ export function getAuthorsGrouped() {
     if (!slug) continue;
     const prev = slugMap.get(slug);
     if (!prev || r.book_count > prev.book_count) {
-      slugMap.set(slug, { name: r.author, slug, book_count: r.book_count });
+      slugMap.set(slug, { name: r.author, slug, book_count: r.book_count, flag: flagFor(r) });
     }
   }
 

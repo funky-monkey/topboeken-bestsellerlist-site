@@ -147,12 +147,27 @@
 
 .az-link:hover {
   color: var(--text);
+}
+
+.az-link:hover .az-name {
   text-decoration: underline;
+}
+
+.az-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.az-flag {
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
 .az-count {
   font-size: 10px;
-  color: #bbb;
+  color: #ccc;
   font-weight: 600;
   flex-shrink: 0;
 }
