@@ -46,10 +46,11 @@ async function run() {
       for (const entry of entries) {
         try {
           const existing = entry.isbn
-            ? db.prepare('SELECT id, locked FROM books WHERE isbn = ?').get(entry.isbn)
+            ? db.prepare('SELECT id, locked, deleted FROM books WHERE isbn = ?').get(entry.isbn)
             : null;
 
           if (existing) {
+            if (existing.deleted) continue; // skip deleted books entirely
             updated++;
             upsertListEntry({ book_id: existing.id, source_id: source.id, genre_id: null, rank: entry.rank, list_name: entry.list_name, week_date: today });
             continue;

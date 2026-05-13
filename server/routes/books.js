@@ -23,19 +23,23 @@ const PER_PAGE = 25;
 const router = Router();
 
 router.get('/books', (req, res) => {
-  const q          = req.query.q ?? '';
-  const noCover    = req.query.no_cover === '1';
-  const langFilter = req.query.lang ?? ''; // 'nl' | 'en' | 'none'
-  const lockedOnly = req.query.locked === '1';
-  const page       = Math.max(1, parseInt(req.query.page ?? '1', 10));
+  const q            = req.query.q ?? '';
+  const noCover      = req.query.no_cover === '1';
+  const langFilter   = req.query.lang ?? ''; // 'nl' | 'en' | 'none'
+  const lockedOnly   = req.query.locked === '1';
+  const deletedOnly  = req.query.deleted === '1';
+  const page         = Math.max(1, parseInt(req.query.page ?? '1', 10));
+  const deletedFlash = req.query.deleted_flash === '1';
   const offset     = (page - 1) * PER_PAGE;
   const db         = getDb();
 
   const conditions = [];
   const args = [];
-  if (q)          { conditions.push('(title LIKE ? OR author LIKE ?)'); args.push(`%${q}%`, `%${q}%`); }
-  if (noCover)    { conditions.push("(cover_path IS NULL OR cover_path = '')"); }
-  if (lockedOnly) { conditions.push('locked = 1'); }
+  if (q)           { conditions.push('(title LIKE ? OR author LIKE ?)'); args.push(`%${q}%`, `%${q}%`); }
+  if (noCover)     { conditions.push("(cover_path IS NULL OR cover_path = '')"); }
+  if (lockedOnly)  { conditions.push('locked = 1'); }
+  if (deletedOnly) { conditions.push('deleted = 1'); }
+  else             { conditions.push('deleted = 0'); } // hide deleted by default
   if (langFilter === 'nl')   { conditions.push("summary_nl IS NOT NULL AND summary_nl != ''"); }
   if (langFilter === 'en')   { conditions.push("summary IS NOT NULL AND summary != '' AND (summary_nl IS NULL OR summary_nl = '')"); }
   if (langFilter === 'none') { conditions.push("(summary IS NULL OR summary = '') AND (summary_nl IS NULL OR summary_nl = '')"); }
@@ -61,11 +65,12 @@ router.get('/books', (req, res) => {
   const totalPages = Math.ceil(total / PER_PAGE);
 
   const counts = {
-    noCover: db.prepare("SELECT COUNT(*) as c FROM books WHERE cover_path IS NULL OR cover_path = ''").get().c,
-    nl:      db.prepare("SELECT COUNT(*) as c FROM books WHERE summary_nl IS NOT NULL AND summary_nl != ''").get().c,
-    en:      db.prepare("SELECT COUNT(*) as c FROM books WHERE summary IS NOT NULL AND summary != '' AND (summary_nl IS NULL OR summary_nl = '')").get().c,
-    none:    db.prepare("SELECT COUNT(*) as c FROM books WHERE (summary IS NULL OR summary = '') AND (summary_nl IS NULL OR summary_nl = '')").get().c,
-    locked:  db.prepare('SELECT COUNT(*) as c FROM books WHERE locked = 1').get().c,
+    noCover:  db.prepare("SELECT COUNT(*) as c FROM books WHERE (cover_path IS NULL OR cover_path = '') AND deleted = 0").get().c,
+    nl:       db.prepare("SELECT COUNT(*) as c FROM books WHERE summary_nl IS NOT NULL AND summary_nl != '' AND deleted = 0").get().c,
+    en:       db.prepare("SELECT COUNT(*) as c FROM books WHERE summary IS NOT NULL AND summary != '' AND (summary_nl IS NULL OR summary_nl = '') AND deleted = 0").get().c,
+    none:     db.prepare("SELECT COUNT(*) as c FROM books WHERE (summary IS NULL OR summary = '') AND (summary_nl IS NULL OR summary_nl = '') AND deleted = 0").get().c,
+    locked:   db.prepare('SELECT COUNT(*) as c FROM books WHERE locked = 1 AND deleted = 0').get().c,
+    deleted:  db.prepare('SELECT COUNT(*) as c FROM books WHERE deleted = 1').get().c,
   };
 
   const rows = books.map(b => {
@@ -80,9 +85,8 @@ router.get('/books', (req, res) => {
         ? `<span title="Alleen Engelse omschrijving" style="font-size:11px;padding:1px 5px;background:#fef9c3;color:#854d0e;border-radius:3px;font-weight:700">EN</span>`
         : `<span title="Geen omschrijving" style="font-size:11px;padding:1px 5px;background:#f3f4f6;color:#9ca3af;border-radius:3px;font-weight:700">—</span>`;
 
-    const lockBadge = b.locked
-      ? `<span title="Vergrendeld" style="font-size:12px">🔒</span>`
-      : '';
+    const lockBadge    = b.locked  ? `<span title="Vergrendeld" style="font-size:12px">🔒</span>` : '';
+    const deletedBadge = b.deleted ? `<span title="Verwijderd" style="font-size:11px;padding:1px 5px;background:#fef2f2;color:#991b1b;border-radius:3px;font-weight:700">DEL</span>` : '';
 
     return `
     <tr>
@@ -90,7 +94,7 @@ router.get('/books', (req, res) => {
         ${b.cover_path ? `<img src="/${b.cover_path}" width="28" height="40" style="object-fit:contain;vertical-align:middle;background:#f5f4f1;margin-right:6px" onerror="this.style.display='none'">` : '<span style="display:inline-block;width:28px;margin-right:6px"></span>'}${b.title}
       </td>
       <td style="font-size:13px;color:#555">${b.author}</td>
-      <td style="white-space:nowrap">${langBadge} ${lockBadge}</td>
+      <td style="white-space:nowrap">${langBadge} ${lockBadge} ${deletedBadge}</td>
       <td>${sourceBadges || '<span style="color:#ccc;font-size:12px">—</span>'}</td>
       <td style="font-size:12px;color:#888">${b.updated_at?.slice(0, 10) ?? ''}</td>
       <td style="white-space:nowrap">
@@ -142,6 +146,7 @@ router.get('/books', (req, res) => {
 
   res.send(layout('Boeken', `
     <h1>Boeken</h1>
+    ${deletedFlash ? `<div class="flash flash-ok">Boek gemarkeerd als verwijderd. <a href="/admin/books?deleted=1">Bekijk verwijderde boeken →</a></div>` : ''}
     <form method="get" style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input name="q" value="${q}" placeholder="Zoek op titel of auteur…" style="width:300px;margin-bottom:0">
       <button class="btn btn-primary" type="submit">Zoeken</button>
@@ -153,6 +158,7 @@ router.get('/books', (req, res) => {
       ${filterBtn('🇬🇧 Alleen Engels (' + counts.en + ')', { lang: 'en' }, langFilter === 'en')}
       ${filterBtn('Geen tekst (' + counts.none + ')', { lang: 'none' }, langFilter === 'none')}
       ${filterBtn('🔒 Vergrendeld (' + counts.locked + ')', { locked: '1' }, lockedOnly)}
+      ${filterBtn('🗑 Verwijderd (' + counts.deleted + ')', { deleted: '1' }, deletedOnly)}
     </div>
     <table>
       <thead><tr><th>Titel</th><th>Auteur</th><th>Taal</th><th>Bronnen</th><th>Bijgewerkt</th><th></th></tr></thead>
@@ -177,7 +183,14 @@ router.get('/books/:id', (req, res) => {
     </label>`).join('');
 
   const siteUrl = process.env.SITE_URL ?? 'https://top-boeken.nl';
-  const flash = req.query.saved
+  const flash = book.deleted
+    ? `<div class="flash flash-err" style="background:#fef2f2;border-color:#fecaca;color:#991b1b">
+        🗑 Dit boek is verwijderd en niet zichtbaar op de site. De scraper slaat het over.
+        <form method="post" action="/admin/books/${book.id}/restore" style="display:inline;margin:0">
+          <button class="btn" style="padding:2px 10px;font-size:12px;margin-left:12px">↩ Herstel</button>
+        </form>
+       </div>`
+    : req.query.saved
     ? `<div class="flash flash-ok">Wijzigingen opgeslagen. <a href="${siteUrl}/boeken/${book.slug}" target="_blank" style="font-weight:700;color:#166534;text-decoration:underline">Bekijk op site →</a></div>`
     : req.query.error
     ? `<div class="flash flash-err">${req.query.error}</div>`
@@ -250,6 +263,15 @@ router.get('/books/:id', (req, res) => {
         </label>
         <a href="/admin/books" class="btn" style="background:#eee;color:#333">Annuleren</a>
         <a href="/admin/books/${book.id}/merge" class="btn" style="background:#fefce8;color:#854d0e;border:1.5px solid #fde68a">⇄ Samenvoegen</a>
+        ${book.deleted
+          ? `<form method="post" action="/admin/books/${book.id}/restore" style="margin:0">
+               <button class="btn" style="background:#dcfce7;color:#166534;border:1.5px solid #bbf7d0" type="submit">↩ Herstel</button>
+             </form>`
+          : `<form method="post" action="/admin/books/${book.id}/delete" style="margin:0"
+               onsubmit="return confirm('${book.title} markeren als verwijderd?')">
+               <button class="btn" style="color:#dc2626;border-color:#fecaca" type="submit">🗑 Verwijder</button>
+             </form>`
+        }
         <a href="${siteUrl}/boeken/${book.slug}" target="_blank" class="btn" style="background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;margin-left:auto">👁 Bekijk op site →</a>
       </div>
     </form>
@@ -406,6 +428,18 @@ router.post('/books/:id/merge', (req, res) => {
   })();
 
   res.redirect(`/admin/books/${targetId}?saved=1`);
+});
+
+// ── Soft delete / restore ─────────────────────────────────────────────────────
+
+router.post('/books/:id/delete', (req, res) => {
+  getDb().prepare("UPDATE books SET deleted=1, updated_at=datetime('now','localtime') WHERE id=?").run(req.params.id);
+  res.redirect('/admin/books?deleted_flash=1');
+});
+
+router.post('/books/:id/restore', (req, res) => {
+  getDb().prepare("UPDATE books SET deleted=0, updated_at=datetime('now','localtime') WHERE id=?").run(req.params.id);
+  res.redirect(`/admin/books/${req.params.id}?saved=1`);
 });
 
 export default router;

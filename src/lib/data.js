@@ -18,7 +18,7 @@ export function getGenreBySlug(slug) {
 
 export function getBookBySlug(slug) {
   return getDb().prepare(
-    'SELECT *, coalesce(summary_nl, summary) as summary_display FROM books WHERE slug = ?'
+    'SELECT *, coalesce(summary_nl, summary) as summary_display FROM books WHERE slug = ? AND deleted = 0'
   ).get(slug);
 }
 
@@ -42,6 +42,7 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
       JOIN genres g   ON g.id  = bg.genre_id
       WHERE s.slug = ? AND le.week_date = ? AND g.slug = ?
         AND b.cover_path IS NOT NULL AND b.cover_path != ''
+        AND b.deleted = 0
       GROUP BY UPPER(TRIM(b.title))
       ORDER BY rank ASC LIMIT 10
     `).all(sourceSlug, latest, genreSlug);
@@ -54,6 +55,7 @@ export function getTopBooksForSource(sourceSlug, genreSlug = null) {
     JOIN sources s ON s.id = le.source_id
     WHERE s.slug = ? AND le.week_date = ?
       AND b.cover_path IS NOT NULL AND b.cover_path != ''
+      AND b.deleted = 0
     GROUP BY UPPER(TRIM(b.title))
     ORDER BY rank ASC LIMIT 10
   `).all(sourceSlug, latest);
@@ -69,6 +71,7 @@ export function getFullListForSource(sourceSlug, limit = 500) {
     JOIN sources s ON s.id = le.source_id
     WHERE s.slug = ? AND le.week_date = ?
       AND b.cover_path IS NOT NULL AND b.cover_path != ''
+      AND b.deleted = 0
     GROUP BY le.book_id
     ORDER BY rank ASC LIMIT ?
   `).all(sourceSlug, latest, limit);
@@ -111,18 +114,18 @@ export function getGenresForBook(bookId) {
 
 export function getAllBookSlugs() {
   return getDb().prepare(
-    "SELECT slug FROM books WHERE cover_path IS NOT NULL AND cover_path != ''"
+    "SELECT slug FROM books WHERE cover_path IS NOT NULL AND cover_path != '' AND deleted = 0"
   ).all().map(r => r.slug);
 }
 
 export function getAllBooksForSearch() {
   return getDb().prepare(
-    "SELECT slug, title, author, cover_path FROM books WHERE cover_path IS NOT NULL AND cover_path != '' ORDER BY title ASC"
+    "SELECT slug, title, author, cover_path FROM books WHERE cover_path IS NOT NULL AND cover_path != '' AND deleted = 0 ORDER BY title ASC"
   ).all();
 }
 
 export function getAllBooks() {
   return getDb().prepare(
-    "SELECT slug, updated_at FROM books WHERE cover_path IS NOT NULL AND cover_path != '' ORDER BY updated_at DESC"
+    "SELECT slug, updated_at FROM books WHERE cover_path IS NOT NULL AND cover_path != '' AND deleted = 0 ORDER BY updated_at DESC"
   ).all();
 }

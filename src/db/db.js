@@ -21,6 +21,7 @@ const MIGRATIONS = [
   "ALTER TABLE articles ADD COLUMN scheduled_for TEXT",
   "ALTER TABLE books ADD COLUMN locked INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE books ADD COLUMN is_ebook INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE books ADD COLUMN deleted  INTEGER NOT NULL DEFAULT 0",
 ];
 
 export function initSchema() {
