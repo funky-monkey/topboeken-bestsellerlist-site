@@ -11,7 +11,6 @@ import { scrapeAmazon }           from './sources/amazon.js';
 import { scrapeGoodreads }        from './sources/goodreads.js';
 import { scrapePublishersWeekly } from './sources/publishers-weekly.js';
 import { scrapeWikipedia }        from './sources/wikipedia.js';
-import { scrapeBarnesNoble }      from './sources/barnes-noble.js';
 
 const SOURCES = [
   { slug: 'ny-times',          fn: scrapeNyTimes },
@@ -21,7 +20,6 @@ const SOURCES = [
   { slug: 'goodreads',         fn: scrapeGoodreads },
   { slug: 'publishers-weekly', fn: scrapePublishersWeekly },
   { slug: 'wikipedia',         fn: scrapeWikipedia },
-  { slug: 'barnes-noble',      fn: scrapeBarnesNoble },
 ];
 
 async function run() {
