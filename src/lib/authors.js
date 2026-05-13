@@ -54,11 +54,8 @@ export function getAuthorsGrouped() {
       .map(([letter, authors]) => ({ letter, authors: authors.sort((a, b) => a.name.localeCompare(b.name)) }));
   }
 
-  const all     = [...slugMap.values()];
-  const dutch   = buildGroups(all.filter(a => a.dutch));
-  const intl    = buildGroups(all.filter(a => !a.dutch));
-
-  return { dutch, intl, totalDutch: all.filter(a => a.dutch).length, totalIntl: all.filter(a => !a.dutch).length };
+  const all = [...slugMap.values()];
+  return { groups: buildGroups(all), total: all.length };
 }
 
 export function getAllAuthorSlugs() {
