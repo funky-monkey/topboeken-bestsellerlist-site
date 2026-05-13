@@ -1,4 +1,4 @@
-import { createWriteStream, mkdirSync, existsSync, statSync } from 'node:fs';
+import { createWriteStream, mkdirSync, existsSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fetchWithAgent } from './http.js';
@@ -21,7 +21,7 @@ async function tryDownload(url, dest) {
   await pipeline(res.body, stream);
   // Reject suspiciously tiny files (placeholder/error images)
   const size = statSync(dest).size;
-  if (size < 2000) { require('node:fs').unlinkSync(dest); return false; }
+  if (size < 2000) { try { unlinkSync(dest); } catch {} return false; }
   return true;
 }
 
