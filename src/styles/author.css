@@ -1,0 +1,101 @@
+.author-hero {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  margin-bottom: 48px;
+  align-items: start;
+}
+
+.author-photo {
+  width: 200px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #eeecea;
+  flex-shrink: 0;
+}
+
+.author-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.author-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  color: #ccc;
+  background: linear-gradient(145deg, #e8e6e0, #d0ceca);
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.author-label {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.author-name {
+  font-size: 40px;
+  font-weight: 400;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.author-dates {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  color: #999;
+}
+
+.author-bio {
+  font-size: 15px;
+  line-height: 1.85;
+  color: #555;
+  max-width: 640px;
+}
+
+.author-book-count {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  color: #aaa;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.author-books-heading {
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .author-hero {
+    grid-template-columns: 120px 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .author-photo {
+    width: 120px;
+  }
+  .author-name {
+    font-size: 26px;
+  }
+  .author-bio {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,67 @@
+---
+import Base from '../../layouts/Base.astro';
+import BookCard from '../../components/BookCard.astro';
+import { getAllAuthorSlugs, getAuthorBySlug, getBooksForAuthor } from '../../lib/authors.js';
+import { titleCase } from '../../lib/text-utils.js';
+import '../../styles/author.css';
+import '../../styles/source-row.css';
+
+export async function getStaticPaths() {
+  return getAllAuthorSlugs().map(({ slug }) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const books    = getBooksForAuthor(slug);
+const author   = getAuthorBySlug(slug);
+const name     = author?.name ?? books[0]?.author ?? slug;
+
+if (!books.length) return Astro.redirect('/');
+
+const photoSrc  = author?.photo_path ? `/${author.photo_path}` : null;
+const hasDates  = author?.birth_date || author?.death_date;
+const datesText = [author?.birth_date, author?.death_date].filter(Boolean).join(' – ');
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name,
+  description: author?.bio?.slice(0, 200),
+};
+---
+<Base
+  title={`${name} — Auteurspagina TopBoeken`}
+  description={author?.bio?.slice(0, 160) ?? `Alle boeken van ${name} op TopBoeken.`}
+  canonical={`https://top-boeken.nl/auteurs/${slug}`}
+  jsonLd={jsonLd}
+>
+  <div class="author-hero">
+    <div class="author-photo">
+      {photoSrc
+        ? <img src={photoSrc} alt={`Foto van ${name}`} width="200" height="200" />
+        : <div class="author-photo-placeholder">✍</div>
+      }
+    </div>
+    <div class="author-info">
+      <div class="author-label">Auteur</div>
+      <h1 class="author-name">{name}</h1>
+      {hasDates && <div class="author-dates">{datesText}</div>}
+      {author?.bio && <p class="author-bio">{author.bio}</p>}
+      <div class="author-book-count">{books.length} {books.length === 1 ? 'boek' : 'boeken'} in de TopBoeken database</div>
+    </div>
+  </div>
+
+  <h2 class="author-books-heading">Boeken van <span class="sans">{name}</span></h2>
+  <div class="book-grid-list">
+    {books.map((b, i) => (
+      i === 0
+        ? <a href={`/boeken/${b.slug}`} class="book-card book-card-big">
+            <img src={`/${b.cover_path}`} alt={titleCase(b.title)} width="400" height="572" loading="eager" />
+            <div class="book-hover"><div class="book-hover-panel">
+              <div class="hover-title">{titleCase(b.title)}</div>
+              <div class="hover-author">{b.author}</div>
+            </div></div>
+          </a>
+        : <BookCard book={b} />
+    ))}
+  </div>
+</Base>

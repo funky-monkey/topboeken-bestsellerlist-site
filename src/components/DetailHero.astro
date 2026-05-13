@@ -3,6 +3,7 @@ import '../styles/detail.css';
 import BuyButtons from './BuyButtons.astro';
 import { starsFromRating } from '../lib/stars.js';
 import { titleCase } from '../lib/text-utils.js';
+import { textSlug } from '../lib/slugify.js';
 
 const { book, lists, affiliates, genres } = Astro.props;
 const coverSrc = book.cover_path ? `/${book.cover_path}` : null;
@@ -40,7 +41,7 @@ const [firstWord, ...restWords] = displayTitle.split(' ');
       <span class="sans">{firstWord}</span>{restWords.length > 0 ? ' ' + restWords.join(' ') : ''}
     </h1>
 
-    <p class="detail-author">door <strong>{book.author}</strong></p>
+    <p class="detail-author">door <a href={`/auteurs/${textSlug(book.author)}`} class="detail-author-link"><strong>{book.author}</strong></a></p>
 
     {stars && (
       <div class="detail-rating">

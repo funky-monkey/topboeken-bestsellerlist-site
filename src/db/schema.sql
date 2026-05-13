@@ -112,5 +112,18 @@ CREATE INDEX IF NOT EXISTS idx_list_entries_book   ON list_entries(book_id);
 CREATE INDEX IF NOT EXISTS idx_list_entries_genre  ON list_entries(genre_id);
 CREATE INDEX IF NOT EXISTS idx_book_affiliates_book ON book_affiliates(book_id);
 CREATE INDEX IF NOT EXISTS idx_books_slug           ON books(slug);
+CREATE TABLE IF NOT EXISTS authors (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT    NOT NULL,
+  slug        TEXT    NOT NULL UNIQUE,
+  bio         TEXT,
+  birth_date  TEXT,
+  death_date  TEXT,
+  photo_path  TEXT,
+  ol_key      TEXT,
+  updated_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_articles_slug        ON articles(slug);
+CREATE INDEX IF NOT EXISTS idx_authors_slug         ON authors(slug);
 CREATE INDEX IF NOT EXISTS idx_article_books_article ON article_books(article_id, position);

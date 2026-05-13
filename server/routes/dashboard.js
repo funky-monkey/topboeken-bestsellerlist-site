@@ -46,10 +46,14 @@ router.get(['/', ''], (req, res) => {
       <button class="btn" onclick="startStream('translate', this, '/admin/translate/stream')" ${missingNl === 0 ? 'disabled' : ''}>
         🌐 Vertalingen aanvullen (${missingNl})
       </button>
+      <button class="btn" onclick="startStream('authors', this, '/admin/enrich-authors/stream')">
+        ✍ Auteurs aanvullen
+      </button>
     </div>
 
     ${streamPanel('covers', 'Cover downloader')}
     ${streamPanel('translate', 'MyMemory vertaalservice — max 80 per run')}
+    ${streamPanel('authors', 'Open Library auteurspagina\'s')}
 
     <script>
     function streamPanel(id) {
