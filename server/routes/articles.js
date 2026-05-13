@@ -132,6 +132,16 @@ router.post('/articles/:id', (req, res) => {
     update.run(req.body[key] || null, parseInt(req.body[`pos_${bookId}`] ?? '0', 10), req.params.id, bookId);
   }
 
+  // Trigger a background rebuild whenever a published/scheduled article is saved
+  if (status === 'published' || status === 'scheduled') {
+    const { spawn } = await import('node:child_process');
+    const { join: pjoin, dirname: pdir } = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const script = pjoin(pdir(fileURLToPath(import.meta.url)), '../../scripts/build.sh');
+    const child = spawn('bash', [script], { detached: true, stdio: 'ignore' });
+    child.unref();
+  }
+
   res.redirect(`/admin/articles/${req.params.id}?saved=1`);
 });
 
