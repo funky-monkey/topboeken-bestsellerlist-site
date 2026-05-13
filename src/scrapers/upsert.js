@@ -16,9 +16,9 @@ export function upsertBook(book) {
   const db = getDb();
   db.prepare(`
     INSERT INTO books (isbn, title, author, publisher, pages, language,
-                       summary, summary_nl, cover_path, goodreads_rating, goodreads_count, slug)
+                       summary, summary_nl, cover_path, goodreads_rating, goodreads_count, is_ebook, slug)
     VALUES (@isbn, @title, @author, @publisher, @pages, @language,
-            @summary, @summary_nl, @cover_path, @goodreads_rating, @goodreads_count, @slug)
+            @summary, @summary_nl, @cover_path, @goodreads_rating, @goodreads_count, @is_ebook, @slug)
     ON CONFLICT(isbn) DO UPDATE SET
       title            = excluded.title,
       author           = excluded.author,
@@ -30,6 +30,7 @@ export function upsertBook(book) {
       cover_path       = coalesce(excluded.cover_path,       cover_path),
       goodreads_rating = coalesce(excluded.goodreads_rating, goodreads_rating),
       goodreads_count  = coalesce(excluded.goodreads_count,  goodreads_count),
+      is_ebook         = excluded.is_ebook,
       updated_at       = datetime('now', 'localtime')
   `).run(book);
   return db.prepare('SELECT id FROM books WHERE isbn = ?').get(book.isbn).id;

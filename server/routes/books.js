@@ -245,6 +245,9 @@ router.get('/books/:id', (req, res) => {
         <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-weight:400">
           <input type="checkbox" name="locked" value="1" ${book.locked ? 'checked' : ''}> 🔒 Vergrendeld
         </label>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-weight:400">
+          <input type="checkbox" name="is_ebook" value="1" ${book.is_ebook ? 'checked' : ''}> 📱 E-book
+        </label>
         <a href="/admin/books" class="btn" style="background:#eee;color:#333">Annuleren</a>
         <a href="/admin/books/${book.id}/merge" class="btn" style="background:#fefce8;color:#854d0e;border:1.5px solid #fde68a">⇄ Samenvoegen</a>
         <a href="${siteUrl}/boeken/${book.slug}" target="_blank" class="btn" style="background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;margin-left:auto">👁 Bekijk op site →</a>
@@ -267,7 +270,7 @@ async function downloadCoverFromUrl(url, destPath) {
 
 router.post('/books/:id', upload.single('cover'), async (req, res) => {
   const db = getDb();
-  const { title, author, isbn, publisher, pages, language, summary, summary_nl, goodreads_rating, goodreads_count, genres, cover_url, locked } = req.body;
+  const { title, author, isbn, publisher, pages, language, summary, summary_nl, goodreads_rating, goodreads_count, genres, cover_url, locked, is_ebook } = req.body;
   const id = parseInt(req.params.id, 10);
 
   const book = db.prepare('SELECT isbn, cover_path FROM books WHERE id = ?').get(id);
@@ -290,7 +293,7 @@ router.post('/books/:id', upload.single('cover'), async (req, res) => {
   }
 
   db.prepare(`UPDATE books SET title=?, author=?, isbn=?, publisher=?, pages=?, language=?, summary=?, summary_nl=?,
-    goodreads_rating=?, goodreads_count=?, cover_path=?, locked=?, updated_at=datetime('now', 'localtime') WHERE id=?`)
+    goodreads_rating=?, goodreads_count=?, cover_path=?, locked=?, is_ebook=?, updated_at=datetime('now', 'localtime') WHERE id=?`)
     .run(
       title, author, isbn || null, publisher || null,
       pages ? parseInt(pages, 10) : null,
@@ -298,7 +301,7 @@ router.post('/books/:id', upload.single('cover'), async (req, res) => {
       summary || null, summary_nl || null,
       goodreads_rating ? parseFloat(goodreads_rating) : null,
       goodreads_count  ? parseInt(goodreads_count, 10)  : null,
-      newCoverPath, locked ? 1 : 0, id
+      newCoverPath, locked ? 1 : 0, is_ebook ? 1 : 0, id
     );
 
   db.prepare('DELETE FROM book_genres WHERE book_id=?').run(id);

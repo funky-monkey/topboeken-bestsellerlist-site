@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS books (
   cover_path       TEXT,
   goodreads_rating REAL,
   goodreads_count  INTEGER,
+  is_ebook         INTEGER NOT NULL DEFAULT 0,
   slug             TEXT    NOT NULL UNIQUE,
   locked           INTEGER NOT NULL DEFAULT 0,
   created_at       TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),

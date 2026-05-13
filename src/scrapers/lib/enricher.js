@@ -26,10 +26,13 @@ export async function enrichBook({
     if (!meta?.isbn) return null;
   }
 
-  // Cover: direct URL (e.g. NYT) → Open Library cover ID → Open Library by ISBN
+  // Cover priority: scraper URL (NYT etc) → Google Books high-res → Open Library
   let cover_path = null;
   if (coverImageUrl) {
     cover_path = await downloadCoverFromUrl(meta.isbn, coverImageUrl);
+  }
+  if (!cover_path && meta.coverUrl) {
+    cover_path = await downloadCoverFromUrl(meta.isbn, meta.coverUrl);
   }
   if (!cover_path) {
     cover_path = await downloadCover(meta.isbn, meta.coverId ?? null);
@@ -63,6 +66,7 @@ export async function enrichBook({
     cover_path:       cover_path ?? null,
     goodreads_rating: null,
     goodreads_count:  null,
+    is_ebook:         meta.is_ebook ?? 0,
     slug:             bookSlug(meta.isbn),
     genreSlugs,
   };

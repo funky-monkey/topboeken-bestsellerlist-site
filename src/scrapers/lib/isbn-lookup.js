@@ -30,6 +30,19 @@ async function googleBooksSearch(q, lang) {
   } catch { return null; }
 }
 
+function highResCoverUrl(item) {
+  const thumb = item?.volumeInfo?.imageLinks?.thumbnail;
+  if (!thumb) return null;
+  try {
+    const u = new URL(thumb.replace('http:', 'https:'));
+    u.searchParams.set('zoom', '0');
+    u.searchParams.delete('edge');
+    return u.toString();
+  } catch {
+    return thumb.replace('http:', 'https:').replace(/zoom=\d/, 'zoom=0').replace(/&edge=[^&]+/, '');
+  }
+}
+
 function extractGoogleInfo(item, title, author) {
   const info   = item?.volumeInfo;
   if (!info) return null;
@@ -43,9 +56,10 @@ function extractGoogleInfo(item, title, author) {
     pages:     info.pageCount ?? null,
     language:  info.language ?? null,
     summary:   info.description ?? null,
-    coverUrl:  info.imageLinks?.thumbnail?.replace('http:', 'https:') ?? null,
+    coverUrl:  highResCoverUrl(item),
     coverId:   null,
     subjects:  info.categories ?? [],
+    is_ebook:  item?.saleInfo?.isEbook === true ? 1 : 0,
   };
 }
 
@@ -106,5 +120,6 @@ export async function lookupIsbn(title, author) {
     coverUrl:   null,
     coverId:    typeof doc.cover_i === 'number' ? doc.cover_i : null,
     subjects:   Array.isArray(doc.subject) ? doc.subject.slice(0, 20) : [],
+    is_ebook:   0,
   };
 }

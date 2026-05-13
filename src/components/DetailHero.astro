@@ -27,6 +27,11 @@ const [firstWord, ...restWords] = book.title.split(' ');
           {l.name} #{l.rank}
         </a>
       ))}
+      {book.is_ebook === 1 && (
+        <span class="detail-tag" style="background:#f0f9ff;color:#0369a1">
+          📱 E-book
+        </span>
+      )}
     </div>
 
     <h1 class="detail-title">

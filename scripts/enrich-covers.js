@@ -5,12 +5,23 @@
  * Then rebuild: bash scripts/build.sh
  */
 import 'dotenv/config';
+import { statSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { getDb, initSchema } from '../src/db/db.js';
-import { downloadCover, downloadCoverFromUrl } from '../src/scrapers/lib/cover-downloader.js';
+import { downloadCover, downloadCoverFromUrl, googleBooksHighRes } from '../src/scrapers/lib/cover-downloader.js';
 import { RateLimiter } from '../src/scrapers/lib/rate-limiter.js';
 
 const limiter = new RateLimiter(3);
 const GOOGLE_BASE = 'https://www.googleapis.com/books/v1/volumes';
+const COVERS_DIR  = process.env.COVERS_DIR ?? './covers';
+const MIN_SIZE    = 15_000; // re-download if existing file is below 15 KB
+
+function needsDownload(coverPath) {
+  if (!coverPath) return true;
+  const full = coverPath.startsWith('/') ? coverPath : join(COVERS_DIR, '..', coverPath);
+  if (!existsSync(full)) return true;
+  return statSync(full).size < MIN_SIZE;
+}
 
 async function fetchGoogleCoverUrl(isbn) {
   const key = process.env.GOOGLE_BOOKS_API_KEY;
@@ -20,11 +31,9 @@ async function fetchGoogleCoverUrl(isbn) {
     const res = await fetch(`${GOOGLE_BASE}?q=isbn:${isbn}&maxResults=1&key=${key}`);
     if (!res.ok) return null;
     const data = await res.json();
-    const info = data.items?.[0]?.volumeInfo;
-    const thumb = info?.imageLinks?.thumbnail ?? info?.imageLinks?.smallThumbnail;
-    if (!thumb) return null;
-    // Upgrade to higher-res version
-    return thumb.replace('http:', 'https:').replace('zoom=1', 'zoom=3');
+    const item = data.items?.[0];
+    const thumb = item?.volumeInfo?.imageLinks?.thumbnail ?? item?.volumeInfo?.imageLinks?.smallThumbnail;
+    return googleBooksHighRes(thumb);
   } catch {
     return null;
   }
@@ -48,12 +57,11 @@ async function run() {
   const db = getDb();
 
   const missing = db.prepare(`
-    SELECT id, isbn, title, author
+    SELECT id, isbn, title, author, cover_path
     FROM books
-    WHERE (cover_path IS NULL OR cover_path = '')
-      AND isbn IS NOT NULL
+    WHERE isbn IS NOT NULL
     ORDER BY id ASC
-  `).all();
+  `).all().filter(b => needsDownload(b.cover_path));
 
   console.log(`Found ${missing.length} books without a cover.\n`);
 
