@@ -13,7 +13,7 @@ const title = titleCase(book.title);
     ? <img src={coverSrc} alt={`Boekomslag van ${title} door ${book.author}`} width="200" height="286" loading="lazy" />
     : <div class="book-card-placeholder"></div>
   }
-  <span class="rank-badge" style={`background:${accentColor}`}>#{book.rank}</span>
+  {book.rank != null && <span class="rank-badge" style={`background:${accentColor}`}>#{book.rank}</span>}
   {sourceName && <span class="source-badge">{sourceName}</span>}
   <div class="book-hover">
     <div class="book-hover-panel">

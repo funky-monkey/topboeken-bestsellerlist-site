@@ -2,7 +2,6 @@
 import Base from '../../layouts/Base.astro';
 import BookCard from '../../components/BookCard.astro';
 import { getAllAuthorSlugs, getAuthorBySlug, getBooksForAuthor } from '../../lib/authors.js';
-import { titleCase } from '../../lib/text-utils.js';
 import '../../styles/author.css';
 import '../../styles/source-row.css';
 
@@ -52,16 +51,6 @@ const jsonLd = {
 
   <h2 class="author-books-heading">Boeken van <span class="sans">{name}</span></h2>
   <div class="book-grid-list">
-    {books.map((b, i) => (
-      i === 0
-        ? <a href={`/boeken/${b.slug}`} class="book-card book-card-big">
-            <img src={`/${b.cover_path}`} alt={titleCase(b.title)} width="400" height="572" loading="eager" />
-            <div class="book-hover"><div class="book-hover-panel">
-              <div class="hover-title">{titleCase(b.title)}</div>
-              <div class="hover-author">{b.author}</div>
-            </div></div>
-          </a>
-        : <BookCard book={b} />
-    ))}
+    {books.map(b => <BookCard book={b} />)}
   </div>
 </Base>
