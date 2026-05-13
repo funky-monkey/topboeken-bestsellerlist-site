@@ -33,8 +33,9 @@ export async function enrichAuthor(name, slug) {
     const firstWord = name.toLowerCase().split(/\s+/)[0];
     const match = docs.find(d => d.name?.toLowerCase().startsWith(firstWord)) ?? docs[0];
 
+    const key = match.key.startsWith('/') ? match.key : `/authors/${match.key}`;
     const detailRes = await fetch(
-      `https://openlibrary.org${match.key}.json`,
+      `https://openlibrary.org${key}.json`,
       { headers: { 'User-Agent': 'TopBoeken/1.0' } }
     );
     if (!detailRes.ok) return null;
@@ -46,6 +47,6 @@ export async function enrichAuthor(name, slug) {
     const photoId   = detail.photos?.find(p => p > 0) ?? null;
     const photoPath = photoId ? await downloadPhoto(slug, photoId) : null;
 
-    return { ol_key: match.key, bio: bio || null, birth_date: birthDate, death_date: deathDate, photo_path: photoPath };
+    return { ol_key: key, bio: bio || null, birth_date: birthDate, death_date: deathDate, photo_path: photoPath };
   } catch { return null; }
 }
