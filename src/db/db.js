@@ -19,6 +19,7 @@ export function getDb() {
 const MIGRATIONS = [
   "ALTER TABLE articles ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'",
   "ALTER TABLE articles ADD COLUMN scheduled_for TEXT",
+  "ALTER TABLE books ADD COLUMN locked INTEGER NOT NULL DEFAULT 0",
 ];
 
 export function initSchema() {

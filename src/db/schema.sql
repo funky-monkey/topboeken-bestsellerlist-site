@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS books (
   goodreads_rating REAL,
   goodreads_count  INTEGER,
   slug             TEXT    NOT NULL UNIQUE,
+  locked           INTEGER NOT NULL DEFAULT 0,
   created_at       TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
   updated_at       TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
