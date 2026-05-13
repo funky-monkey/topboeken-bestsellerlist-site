@@ -14,6 +14,7 @@ import rebuildRoutes       from './routes/rebuild.js';
 import authStatusRoutes    from './routes/auth-status.js';
 import enrichCoversRoutes  from './routes/enrich-covers.js';
 import articlesRoutes      from './routes/articles.js';
+import translateRoutes     from './routes/translate.js';
 
 initSchema();
 
@@ -42,6 +43,7 @@ app.use('/admin', requireAuth, logsRoutes);
 app.use('/admin', requireAuth, scrapeRoutes);
 app.use('/admin', requireAuth, enrichCoversRoutes);
 app.use('/admin', requireAuth, articlesRoutes);
+app.use('/admin', requireAuth, translateRoutes);
 
 // API routes — auth-status is public (no requireAuth), rebuild is protected
 app.use('/api', authStatusRoutes);
