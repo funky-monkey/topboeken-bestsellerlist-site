@@ -159,7 +159,17 @@ router.post('/articles/:id/delete', (req, res) => {
   res.redirect('/admin/articles');
 });
 
-// ── View helper ───────────────────────────────────────────────────────────────
+// ── View helpers ──────────────────────────────────────────────────────────────
+
+function inlineSearch(article) {
+  return `
+    <div style="margin-top:16px">
+      <input id="book-search-input" data-article-id="${article.id}"
+        placeholder="🔍  Zoek boek op titel of auteur om toe te voegen…"
+        autocomplete="off" style="width:100%;max-width:500px;margin-bottom:0">
+      <div id="book-search-results" style="margin-top:4px;max-width:700px"></div>
+    </div>`;
+}
 
 function articleForm(article, books) {
   const isNew = !article;
@@ -210,16 +220,7 @@ function articleForm(article, books) {
       </script>
     </div>`;
 
-  const searchSection = !isNew ? `
-    <div style="border-top:2px solid #f0f0ee;margin-top:32px;padding-top:24px">
-      <h2 style="font-size:16px;font-weight:600;margin:0 0 12px">Boek toevoegen</h2>
-      <input id="book-search-input" data-article-id="${article.id}"
-        placeholder="Zoek op titel of auteur…" autocomplete="off"
-        style="width:360px;margin-bottom:0">
-      <div id="book-search-results" style="margin-top:8px;max-width:700px"></div>
-    </div>
-    <script src="/scripts/article-book-search.js"></script>
-  ` : '';
+  const searchSection = !isNew ? `<script src="/scripts/article-book-search.js"></script>` : '';
 
   const deleteBtn = article ? `
     <form method="post" action="/admin/articles/${article.id}/delete" style="margin:0"
@@ -248,13 +249,18 @@ function articleForm(article, books) {
           <textarea name="intro" rows="5" placeholder="Inleidende tekst boven de boeken…" style="width:100%">${article?.intro ?? ''}</textarea>
         </div>
 
-        ${!isNew ? `
-        <div>
-          <label>Boeken in dit artikel <span style="font-weight:400;color:#aaa;font-size:13px">(${(books ?? []).length})</span></label>
-          ${books?.length
-            ? `<table style="width:100%">${bookRows}</table>`
-            : '<p style="color:#aaa;font-size:13px">Nog geen boeken — gebruik het zoekveld hieronder.</p>'}
-        </div>` : ''}
+        ${isNew
+          ? `<div style="background:#f0f9ff;border:1px solid #bae6fd;padding:10px 14px;border-radius:4px;font-size:13px;color:#0369a1">
+              💡 Klik op <strong>Aanmaken</strong> — daarna kun je direct boeken zoeken en toevoegen.
+             </div>`
+          : `<div>
+              <label>Boeken in dit artikel <span style="font-weight:400;color:#aaa;font-size:13px">(${(books ?? []).length})</span></label>
+              ${books?.length
+                ? `<table style="width:100%">${bookRows}`
+                  + `<tr><td colspan="3" style="padding-top:16px">${inlineSearch(article)}</td></tr></table>`
+                : inlineSearch(article)}
+             </div>`
+        }
 
         <div>
           <label>Outro</label>
