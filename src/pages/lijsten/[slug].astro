@@ -76,7 +76,7 @@ const jsonLd = {
     (() => {
       const [first, ...rest] = books;
       return (
-        <div class="book-grid sublist-grid">
+        <div class="book-grid-list">
           {first && <BookCardBig book={first} accentColor={source.accent_color} />}
           {rest.map(b => <BookCard book={b} accentColor={source.accent_color} />)}
         </div>

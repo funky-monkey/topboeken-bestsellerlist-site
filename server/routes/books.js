@@ -259,7 +259,7 @@ router.get('/books/:id', (req, res) => {
           <label style="margin-bottom:4px">Of: URL</label>
           <div style="display:flex;gap:6px;margin-bottom:4px">
             <input type="text" name="cover_url" id="cover-url-input" placeholder="https://…" style="margin-bottom:0;flex:1;min-width:0">
-            <button type="button" onclick="previewUrl()" class="btn" style="background:#eee;color:#333;white-space:nowrap;padding:6px 10px">👁</button>
+            <button type="button" id="preview-btn" class="btn" style="background:#eee;color:#333;white-space:nowrap;padding:6px 10px">👁</button>
           </div>
           <p style="font-size:11px;color:#aaa;margin-bottom:16px">Upload heeft voorrang op URL.</p>
 
@@ -299,9 +299,28 @@ router.get('/books/:id', (req, res) => {
             document.getElementById('cover-url-input').value = '';
           }
         });
-        function previewUrl() {
-          const url = document.getElementById('cover-url-input').value.trim();
-          if (url) setPreview(url);
+        document.getElementById('preview-btn').addEventListener('click', previewUrl);
+        async function previewUrl() {
+          const urlInput = document.getElementById('cover-url-input');
+          const url = urlInput.value.trim();
+          if (!url) return;
+          const btn = document.querySelector('[onclick="previewUrl()"]') || document.querySelector('button[type=button]:not(#redownload-btn):not(#delete-btn)');
+          if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+          try {
+            const r = await fetch('/admin/books/${book.id}/fetch-cover-url', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url }),
+            });
+            const data = await r.json();
+            if (r.ok) {
+              setPreview('/' + data.path + '?t=' + Date.now());
+              urlInput.value = '';
+            } else {
+              alert('Download mislukt: ' + data.error);
+            }
+          } catch(e) { alert('Fout: ' + e.message); }
+          if (btn) { btn.disabled = false; btn.textContent = '👁'; }
         }
         document.getElementById('cover-url-input').addEventListener('keydown', function(e) {
           if (e.key === 'Enter') { e.preventDefault(); previewUrl(); }
@@ -479,6 +498,29 @@ router.post('/books/:id/merge', (req, res) => {
   })();
 
   res.redirect(`/admin/books/${targetId}?saved=1`);
+});
+
+// ── Cover fetch from URL (used by the 👁 preview button) ─────────────────────
+
+router.post('/books/:id/fetch-cover-url', async (req, res) => {
+  const { url } = req.body;
+  if (!url?.trim()) return res.status(400).json({ error: 'Geen URL' });
+
+  const db   = getDb();
+  const book = db.prepare('SELECT isbn FROM books WHERE id = ?').get(req.params.id);
+  if (!book) return res.status(404).json({ error: 'Boek niet gevonden' });
+
+  const coversDir = process.env.COVERS_DIR ?? '/var/www/top-boeken.nl/html/covers';
+  const dest = join(coversDir, `${book.isbn}.jpg`);
+
+  try {
+    await downloadCoverFromUrl(url.trim(), dest);
+    db.prepare("UPDATE books SET cover_path=?, updated_at=datetime('now','localtime') WHERE id=?")
+      .run(`covers/${book.isbn}.jpg`, book.id);
+    res.json({ path: `covers/${book.isbn}.jpg` });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // ── Cover re-download ─────────────────────────────────────────────────────────
