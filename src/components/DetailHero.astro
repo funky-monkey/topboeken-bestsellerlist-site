@@ -2,11 +2,13 @@
 import '../styles/detail.css';
 import BuyButtons from './BuyButtons.astro';
 import { starsFromRating } from '../lib/stars.js';
+import { titleCase } from '../lib/text-utils.js';
 
 const { book, lists, affiliates, genres } = Astro.props;
 const coverSrc = book.cover_path ? `/${book.cover_path}` : null;
 const stars = starsFromRating(book.goodreads_rating);
-const [firstWord, ...restWords] = book.title.split(' ');
+const displayTitle = titleCase(book.title);
+const [firstWord, ...restWords] = displayTitle.split(' ');
 ---
 <div class="detail-hero">
   <div class="detail-cover-col">

@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getAllArticles, getArticleBySlug, getBooksForArticle } from '../../lib/articles.js';
+import { titleCase } from '../../lib/text-utils.js';
 import '../../styles/article.css';
 
 export async function getStaticPaths() {
@@ -58,7 +59,7 @@ function stars(rating) {
             }
           </div>
           <div class="article-book-info">
-            <a href={`/boeken/${book.slug}`} class="article-book-title">{book.title}</a>
+            <a href={`/boeken/${book.slug}`} class="article-book-title">{titleCase(book.title)}</a>
             <div class="article-book-author">{book.author}</div>
             {book.goodreads_rating && (
               <div class="article-book-rating">
