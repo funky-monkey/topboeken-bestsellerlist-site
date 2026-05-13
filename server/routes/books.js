@@ -100,6 +100,10 @@ router.get('/books', (req, res) => {
       <td style="white-space:nowrap">
         <a href="/admin/books/${b.id}" class="btn btn-primary" style="padding:4px 10px;font-size:12px">Bewerk</a>
         &nbsp;<a href="${siteUrl}/boeken/${b.slug}" target="_blank" class="btn" style="padding:4px 10px;font-size:12px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">👁</a>
+        ${b.deleted
+          ? `&nbsp;<form method="post" action="/admin/books/${b.id}/restore" style="display:inline;margin:0"><button class="btn" style="padding:4px 10px;font-size:12px;color:#166534;border-color:#bbf7d0" type="submit">↩</button></form>`
+          : `&nbsp;<form method="post" action="/admin/books/${b.id}/delete" style="display:inline;margin:0" onsubmit="return confirm('${b.title.replace(/'/g, "\\'")} verwijderen?')"><button class="btn" style="padding:4px 10px;font-size:12px;color:#dc2626;border-color:#fecaca" type="submit">🗑</button></form>`
+        }
       </td>
     </tr>`;
   }).join('');
@@ -492,7 +496,10 @@ router.post('/books/:id/redownload-cover', async (req, res) => {
 
 router.post('/books/:id/delete', (req, res) => {
   getDb().prepare("UPDATE books SET deleted=1, updated_at=datetime('now','localtime') WHERE id=?").run(req.params.id);
-  res.redirect('/admin/books?deleted_flash=1');
+  const back = req.get('Referer') ?? '/admin/books';
+  const url  = new URL(back, 'http://x');
+  url.searchParams.set('deleted_flash', '1');
+  res.redirect(url.pathname + url.search);
 });
 
 router.post('/books/:id/restore', (req, res) => {
