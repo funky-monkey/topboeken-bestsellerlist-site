@@ -216,7 +216,12 @@ router.get('/books/:id', (req, res) => {
       <label>Engelse omschrijving</label><textarea name="summary" rows="4">${book.summary ?? ''}</textarea>
       <label>Nederlandse omschrijving</label><textarea name="summary_nl" rows="4">${book.summary_nl ?? ''}</textarea>
       <label>Cover</label>
-      ${currentCover}
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:8px">
+        ${currentCover}
+        <form method="post" action="/admin/books/${book.id}/redownload-cover" style="margin:0;padding-top:4px">
+          <button class="btn" type="submit" style="font-size:12px;padding:4px 10px;white-space:nowrap">🔄 Opnieuw ophalen</button>
+        </form>
+      </div>
 
       <label style="margin-bottom:4px">Bestand uploaden</label>
       <input type="file" name="cover" accept="image/*" style="margin-bottom:12px" id="cover-input">
@@ -428,6 +433,59 @@ router.post('/books/:id/merge', (req, res) => {
   })();
 
   res.redirect(`/admin/books/${targetId}?saved=1`);
+});
+
+// ── Cover re-download ─────────────────────────────────────────────────────────
+
+router.post('/books/:id/redownload-cover', async (req, res) => {
+  const db   = getDb();
+  const book = db.prepare('SELECT id, isbn, title, author, cover_path FROM books WHERE id = ?').get(req.params.id);
+  if (!book) return res.redirect(`/admin/books/${req.params.id}?error=Boek+niet+gevonden`);
+
+  // Delete existing file so the downloader won't skip it
+  if (book.cover_path) {
+    const coversDir = process.env.COVERS_DIR ?? '/var/www/top-boeken.nl/html/covers';
+    const { join } = await import('node:path');
+    const { unlinkSync, existsSync } = await import('node:fs');
+    const full = join(coversDir, `${book.isbn}.jpg`);
+    if (existsSync(full)) try { unlinkSync(full); } catch {}
+  }
+
+  // Clear cover_path so the site doesn't show a broken image while we fetch
+  db.prepare("UPDATE books SET cover_path=NULL, updated_at=datetime('now','localtime') WHERE id=?").run(book.id);
+
+  // Re-fetch from Google Books → Open Library
+  const { downloadCover, downloadCoverFromUrl, googleBooksHighRes } = await import('../../src/scrapers/lib/cover-downloader.js');
+
+  let cover_path = null;
+
+  // Try Google Books by ISBN first
+  const key = process.env.GOOGLE_BOOKS_API_KEY;
+  if (key) {
+    try {
+      const gRes  = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${book.isbn}&maxResults=1&key=${key}`);
+      const gData = await gRes.json();
+      const thumb = gData.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
+      if (thumb) cover_path = await downloadCoverFromUrl(book.isbn, googleBooksHighRes(thumb));
+    } catch {}
+  }
+
+  // Fallback to Open Library
+  if (!cover_path) cover_path = await downloadCover(book.isbn, null);
+
+  if (cover_path) {
+    db.prepare("UPDATE books SET cover_path=?, updated_at=datetime('now','localtime') WHERE id=?").run(cover_path, book.id);
+    // Trigger background rebuild so the site updates
+    const { spawn } = await import('node:child_process');
+    const { join: pjoin, dirname } = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const script = pjoin(dirname(fileURLToPath(import.meta.url)), '../../scripts/build.sh');
+    const child  = spawn('bash', [script], { detached: true, stdio: 'ignore' });
+    child.unref();
+    res.redirect(`/admin/books/${book.id}?saved=1`);
+  } else {
+    res.redirect(`/admin/books/${book.id}?error=Cover+niet+gevonden+via+Google+Books+of+Open+Library`);
+  }
 });
 
 // ── Soft delete / restore ─────────────────────────────────────────────────────
