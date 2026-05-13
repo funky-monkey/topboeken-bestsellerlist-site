@@ -105,6 +105,32 @@
   color: #888;
 }
 
+.article-book-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.article-book-stars {
+  color: #f59e0b;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.article-book-rating-num {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+}
+
+.article-book-rating-count {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  color: #aaa;
+}
+
 .article-book-desc {
   font-size: 15px;
   line-height: 1.8;

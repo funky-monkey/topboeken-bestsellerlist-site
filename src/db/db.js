@@ -16,7 +16,16 @@ export function getDb() {
   return _db;
 }
 
+const MIGRATIONS = [
+  "ALTER TABLE articles ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'",
+  "ALTER TABLE articles ADD COLUMN scheduled_for TEXT",
+];
+
 export function initSchema() {
   const sql = readFileSync(join(__dirname, 'schema.sql'), 'utf8');
-  getDb().exec(sql);
+  const db = getDb();
+  db.exec(sql);
+  for (const m of MIGRATIONS) {
+    try { db.exec(m); } catch { /* column already exists */ }
+  }
 }

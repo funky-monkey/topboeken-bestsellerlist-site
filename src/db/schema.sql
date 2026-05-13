@@ -83,15 +83,16 @@ CREATE TABLE IF NOT EXISTS scrape_log (
 );
 
 CREATE TABLE IF NOT EXISTS articles (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  title        TEXT    NOT NULL,
-  slug         TEXT    NOT NULL UNIQUE,
-  intro        TEXT,
-  outro        TEXT,
-  published    INTEGER NOT NULL DEFAULT 0,
-  published_at TEXT,
-  created_at   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
-  updated_at   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  title          TEXT    NOT NULL,
+  slug           TEXT    NOT NULL UNIQUE,
+  intro          TEXT,
+  outro          TEXT,
+  status         TEXT    NOT NULL DEFAULT 'draft',
+  published_at   TEXT,
+  scheduled_for  TEXT,
+  created_at     TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
+  updated_at     TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 
 CREATE TABLE IF NOT EXISTS article_books (

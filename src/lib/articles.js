@@ -9,14 +9,16 @@ function tableExists() {
 
 export function getAllArticles({ publishedOnly = true } = {}) {
   if (!tableExists()) return [];
-  const where = publishedOnly ? 'WHERE a.published = 1' : '';
+  const where = publishedOnly
+    ? "WHERE a.status = 'published' OR (a.status = 'scheduled' AND a.scheduled_for <= datetime('now', 'localtime'))"
+    : '';
   return getDb().prepare(`
     SELECT a.*, COUNT(ab.id) as book_count
     FROM articles a
     LEFT JOIN article_books ab ON ab.article_id = a.id
     ${where}
     GROUP BY a.id
-    ORDER BY a.published_at DESC, a.created_at DESC
+    ORDER BY coalesce(a.published_at, a.scheduled_for, a.created_at) DESC
   `).all();
 }
 
@@ -31,6 +33,7 @@ export function getArticleById(id) {
 export function getBooksForArticle(articleId) {
   return getDb().prepare(`
     SELECT b.id, b.title, b.author, b.slug, b.cover_path, b.isbn,
+           b.goodreads_rating, b.goodreads_count,
            ab.description as article_description, ab.position,
            coalesce(ba_bol.url, '') as bol_url,
            coalesce(ba_amz.url, '') as amazon_url

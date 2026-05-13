@@ -17,6 +17,13 @@ function formatDate(str) {
   if (!str) return '';
   return new Date(str).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
+
+function stars(rating) {
+  const full  = Math.floor(rating);
+  const half  = rating - full >= 0.25 && rating - full < 0.75;
+  const empty = 5 - full - (half ? 1 : 0);
+  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+}
 ---
 <Base
   title={`${article.title} — TopBoeken`}
@@ -53,6 +60,15 @@ function formatDate(str) {
           <div class="article-book-info">
             <a href={`/boeken/${book.slug}`} class="article-book-title">{book.title}</a>
             <div class="article-book-author">{book.author}</div>
+            {book.goodreads_rating && (
+              <div class="article-book-rating">
+                <span class="article-book-stars">{stars(book.goodreads_rating)}</span>
+                <span class="article-book-rating-num">{Number(book.goodreads_rating).toFixed(1)}</span>
+                {book.goodreads_count && (
+                  <span class="article-book-rating-count">({book.goodreads_count.toLocaleString('nl-NL')} beoordelingen)</span>
+                )}
+              </div>
+            )}
             {book.article_description && (
               <p class="article-book-desc">
                 {book.article_description.split('\n').map(line => <>{line}<br /></>)}

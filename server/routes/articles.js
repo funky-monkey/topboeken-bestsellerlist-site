@@ -16,19 +16,30 @@ router.get('/articles', (req, res) => {
     ORDER BY a.created_at DESC
   `).all();
 
-  const rows = articles.map(a => `
+  const statusLabel = { draft: 'Concept', published: 'Gepubliceerd', scheduled: 'Ingepland' };
+  const statusColor = {
+    draft:     { bg: '#fef9c3', fg: '#854d0e' },
+    published: { bg: '#dcfce7', fg: '#166534' },
+    scheduled: { bg: '#dbeafe', fg: '#1d4ed8' },
+  };
+
+  const rows = articles.map(a => {
+    const s = a.status ?? (a.published ? 'published' : 'draft');
+    const c = statusColor[s] ?? statusColor.draft;
+    const dateStr = s === 'scheduled' ? a.scheduled_for : (a.published_at ?? a.created_at);
+    return `
     <tr>
       <td><a href="/admin/articles/${a.id}">${a.title}</a></td>
       <td style="font-size:13px;color:#888">${a.book_count} boeken</td>
       <td>
-        <span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:700;
-          background:${a.published ? '#dcfce7' : '#fef9c3'};color:${a.published ? '#166534' : '#854d0e'}">
-          ${a.published ? 'Gepubliceerd' : 'Concept'}
+        <span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:700;background:${c.bg};color:${c.fg}">
+          ${statusLabel[s] ?? s}
         </span>
       </td>
-      <td style="font-size:12px;color:#aaa">${(a.published_at ?? a.created_at).slice(0, 10)}</td>
+      <td style="font-size:12px;color:#aaa">${(dateStr ?? '').slice(0, 10)}</td>
       <td><a href="/admin/articles/${a.id}" class="btn btn-primary" style="padding:4px 10px;font-size:12px">Bewerk</a></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   res.send(layout('Artikelen', `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
@@ -42,6 +53,25 @@ router.get('/articles', (req, res) => {
   `));
 });
 
+// ── Book search JSON (must be before /:id) ────────────────────────────────────
+
+router.get('/articles/books/search', (req, res) => {
+  const q       = (req.query.q ?? '').trim();
+  const exclude = (req.query.exclude ?? '').split(',').map(Number).filter(Boolean);
+  if (q.length < 2) return res.json([]);
+
+  let rows = getDb().prepare(`
+    SELECT id, title, author, isbn, cover_path, goodreads_rating
+    FROM books
+    WHERE (title LIKE ? OR author LIKE ?)
+      AND cover_path IS NOT NULL AND cover_path != ''
+    ORDER BY title ASC LIMIT 12
+  `).all(`%${q}%`, `%${q}%`);
+
+  if (exclude.length) rows = rows.filter(r => !exclude.includes(r.id));
+  res.json(rows.slice(0, 8));
+});
+
 // ── New ───────────────────────────────────────────────────────────────────────
 
 router.get('/articles/new', (req, res) => {
@@ -49,14 +79,17 @@ router.get('/articles/new', (req, res) => {
 });
 
 router.post('/articles/new', (req, res) => {
-  const { title, intro, outro, published } = req.body;
+  const { title, intro, outro, status, scheduled_for } = req.body;
   const slug = textSlug(title);
   const db = getDb();
-  const now = "datetime('now', 'localtime')";
+  const effectiveStatus = status ?? 'draft';
   const id = db.prepare(`
-    INSERT INTO articles (title, slug, intro, outro, published, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ${published ? now : 'NULL'}, ${now}, ${now})
-  `).run(title, slug, intro || null, outro || null, published ? 1 : 0).lastInsertRowid;
+    INSERT INTO articles (title, slug, intro, outro, status, published_at, scheduled_for, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?,
+      CASE WHEN ? = 'published' THEN datetime('now','localtime') ELSE NULL END,
+      ?,
+      datetime('now','localtime'), datetime('now','localtime'))
+  `).run(title, slug, intro || null, outro || null, effectiveStatus, effectiveStatus, scheduled_for || null).lastInsertRowid;
   res.redirect(`/admin/articles/${id}`);
 });
 
@@ -68,47 +101,35 @@ router.get('/articles/:id', (req, res) => {
   if (!article) return res.status(404).send('Niet gevonden');
 
   const books = db.prepare(`
-    SELECT b.id, b.title, b.author, b.cover_path, ab.description, ab.position
+    SELECT b.id, b.title, b.author, b.cover_path, b.goodreads_rating, ab.description, ab.position
     FROM article_books ab JOIN books b ON b.id = ab.book_id
     WHERE ab.article_id = ? ORDER BY ab.position ASC, ab.id ASC
   `).all(article.id);
 
-  const q = req.query.q ?? '';
-  let searchResults = [];
-  if (q) {
-    const existingIds = books.map(b => b.id);
-    const rows = db.prepare(`
-      SELECT id, title, author, cover_path FROM books
-      WHERE (title LIKE ? OR author LIKE ?) AND cover_path IS NOT NULL AND cover_path != ''
-      ORDER BY title ASC LIMIT 10
-    `).all(`%${q}%`, `%${q}%`);
-    searchResults = rows.filter(r => !existingIds.includes(r.id));
-  }
-
-  res.send(layout(article.title, articleForm(article, books, q, searchResults)));
+  const saved = req.query.saved ? '<div class="flash flash-ok">Opgeslagen.</div>' : '';
+  res.send(layout(article.title, saved + articleForm(article, books)));
 });
 
 router.post('/articles/:id', (req, res) => {
-  const { title, intro, outro, published } = req.body;
+  const { title, intro, outro, status, scheduled_for } = req.body;
   const db = getDb();
-  const wasPublished = db.prepare('SELECT published FROM articles WHERE id = ?').get(req.params.id)?.published;
-  const nowPublishing = published && !wasPublished;
+  const prev = db.prepare('SELECT status FROM articles WHERE id = ?').get(req.params.id);
+  const nowPublishing = status === 'published' && prev?.status !== 'published';
 
   db.prepare(`
-    UPDATE articles SET title=?, intro=?, outro=?, published=?,
+    UPDATE articles SET title=?, intro=?, outro=?, status=?,
       published_at = CASE WHEN ? THEN datetime('now','localtime') ELSE published_at END,
+      scheduled_for = ?,
       updated_at = datetime('now','localtime')
     WHERE id=?
-  `).run(title, intro || null, outro || null, published ? 1 : 0, nowPublishing ? 1 : 0, req.params.id);
+  `).run(title, intro || null, outro || null, status ?? 'draft', nowPublishing ? 1 : 0, scheduled_for || null, req.params.id);
 
   // Save book descriptions and positions
-  const descKeys = Object.keys(req.body).filter(k => k.startsWith('desc_'));
-  const posKeys  = Object.keys(req.body).filter(k => k.startsWith('pos_'));
-  const update   = db.prepare('UPDATE article_books SET description=?, position=? WHERE article_id=? AND book_id=?');
-  for (const key of descKeys) {
+  const db2 = getDb();
+  const update = db2.prepare('UPDATE article_books SET description=?, position=? WHERE article_id=? AND book_id=?');
+  for (const key of Object.keys(req.body).filter(k => k.startsWith('desc_'))) {
     const bookId = key.slice(5);
-    const posKey = `pos_${bookId}`;
-    update.run(req.body[key] || null, parseInt(req.body[posKey] ?? '0', 10), req.params.id, bookId);
+    update.run(req.body[key] || null, parseInt(req.body[`pos_${bookId}`] ?? '0', 10), req.params.id, bookId);
   }
 
   res.redirect(`/admin/articles/${req.params.id}?saved=1`);
@@ -140,18 +161,21 @@ router.post('/articles/:id/delete', (req, res) => {
 
 // ── View helper ───────────────────────────────────────────────────────────────
 
-function articleForm(article, books, q = '', searchResults = []) {
+function articleForm(article, books) {
   const isNew = !article;
-  const saved = '';
+  const status = article?.status ?? (article?.published ? 'published' : 'draft');
+  const scheduledFor = article?.scheduled_for ?? '';
 
   const bookRows = (books ?? []).map((b, i) => `
-    <tr>
+    <tr data-book-id="${b.id}">
       <td style="width:44px;vertical-align:top;padding-top:8px">
-        ${b.cover_path ? `<img src="/${b.cover_path}" width="36" style="display:block;object-fit:contain;background:#f5f4f1">` : '<div style="width:36px;height:50px;background:#eee"></div>'}
+        ${b.cover_path
+          ? `<img src="/${b.cover_path}" width="36" style="display:block;object-fit:contain;background:#f5f4f1">`
+          : '<div style="width:36px;height:50px;background:#eee"></div>'}
       </td>
       <td style="vertical-align:top;padding:8px 12px 8px 8px">
         <div style="font-weight:600;font-size:14px">${b.title}</div>
-        <div style="color:#888;font-size:12px;margin-top:2px">${b.author}</div>
+        <div style="color:#888;font-size:12px;margin-top:2px">${b.author}${b.goodreads_rating ? ` · ★ ${b.goodreads_rating}` : ''}</div>
         <textarea name="desc_${b.id}" rows="3" placeholder="Omschrijving voor dit artikel (optioneel)…"
           style="width:100%;margin-top:8px;font-size:13px;resize:vertical">${b.description ?? ''}</textarea>
       </td>
@@ -165,32 +189,48 @@ function articleForm(article, books, q = '', searchResults = []) {
       </td>
     </tr>`).join('');
 
-  const searchForm = article ? `
-    <form method="get" action="/admin/articles/${article.id}" style="display:flex;gap:8px;margin-top:24px;align-items:center">
-      <input name="q" value="${q}" placeholder="Zoek boek op titel of auteur…" style="width:300px;margin:0">
-      <button class="btn btn-primary" type="submit">Zoeken</button>
-    </form>
-    ${searchResults.length ? `
-    <table style="margin-top:12px">
-      ${searchResults.map(b => `
-      <tr>
-        <td style="width:32px">${b.cover_path ? `<img src="/${b.cover_path}" width="28" style="vertical-align:middle;object-fit:contain">` : ''}</td>
-        <td style="font-size:14px"><strong>${b.title}</strong> — ${b.author}</td>
-        <td style="width:90px">
-          <form method="post" action="/admin/articles/${article.id}/books/add" style="margin:0">
-            <input type="hidden" name="book_id" value="${b.id}">
-            <button class="btn btn-primary" style="padding:4px 10px;font-size:12px" type="submit">+ Toevoegen</button>
-          </form>
-        </td>
-      </tr>`).join('')}
-    </table>` : (q ? '<p style="color:#aaa;font-size:13px;margin-top:8px">Geen resultaten.</p>' : '')}
+  const publishControls = `
+    <div>
+      <label>Publicatiestatus</label>
+      <select name="status" id="art-status" style="width:auto;margin-bottom:8px">
+        <option value="draft"     ${status === 'draft'     ? 'selected' : ''}>Concept — niet zichtbaar</option>
+        <option value="published" ${status === 'published' ? 'selected' : ''}>Gepubliceerd — direct live</option>
+        <option value="scheduled" ${status === 'scheduled' ? 'selected' : ''}>Ingepland — op datum live</option>
+      </select>
+      <div id="scheduled-wrap" style="display:${status === 'scheduled' ? 'block' : 'none'};margin-top:4px">
+        <label style="font-size:13px;margin-bottom:4px">Publicatiedatum &amp; tijd</label>
+        <input type="datetime-local" name="scheduled_for" value="${scheduledFor.slice(0, 16)}"
+          style="width:auto">
+        <p style="font-size:12px;color:#888;margin-top:4px">Het artikel verschijnt automatisch bij de eerstvolgende site-rebuild na deze datum.</p>
+      </div>
+      <script>
+        document.getElementById('art-status').addEventListener('change', function() {
+          document.getElementById('scheduled-wrap').style.display = this.value === 'scheduled' ? 'block' : 'none';
+        });
+      </script>
+    </div>`;
+
+  const searchSection = !isNew ? `
+    <div style="border-top:2px solid #f0f0ee;margin-top:32px;padding-top:24px">
+      <h2 style="font-size:16px;font-weight:600;margin:0 0 12px">Boek toevoegen</h2>
+      <input id="book-search-input" data-article-id="${article.id}"
+        placeholder="Zoek op titel of auteur…" autocomplete="off"
+        style="width:360px;margin-bottom:0">
+      <div id="book-search-results" style="margin-top:8px;max-width:700px"></div>
+    </div>
+    <script src="/scripts/article-book-search.js"></script>
   ` : '';
 
   const deleteBtn = article ? `
     <form method="post" action="/admin/articles/${article.id}/delete" style="margin:0"
       onsubmit="return confirm('Artikel verwijderen?')">
-      <button class="btn" style="color:#dc2626;border-color:#fecaca" type="submit">Verwijder artikel</button>
+      <button class="btn" style="color:#dc2626;border-color:#fecaca" type="submit">Verwijder</button>
     </form>` : '';
+
+  const siteUrl = process.env.SITE_URL ?? 'https://top-boeken.nl';
+  const viewBtn = article && status === 'published'
+    ? `<a href="${siteUrl}/blog/${article.slug}" target="_blank" class="btn" style="background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;margin-left:auto">👁 Bekijk op site →</a>`
+    : '';
 
   return `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
@@ -198,7 +238,7 @@ function articleForm(article, books, q = '', searchResults = []) {
       <a href="/admin/articles" class="btn">← Terug</a>
     </div>
     <form method="post" action="${isNew ? '/admin/articles/new' : `/admin/articles/${article.id}`}">
-      <div style="display:grid;gap:16px;max-width:860px">
+      <div style="display:grid;gap:20px;max-width:860px">
         <div>
           <label>Titel</label>
           <input name="title" value="${article?.title ?? ''}" required style="width:100%">
@@ -210,25 +250,27 @@ function articleForm(article, books, q = '', searchResults = []) {
 
         ${!isNew ? `
         <div>
-          <label>Boeken in dit artikel</label>
-          ${books?.length ? `<table style="width:100%">${bookRows}</table>` : '<p style="color:#aaa;font-size:13px">Nog geen boeken toegevoegd.</p>'}
+          <label>Boeken in dit artikel <span style="font-weight:400;color:#aaa;font-size:13px">(${(books ?? []).length})</span></label>
+          ${books?.length
+            ? `<table style="width:100%">${bookRows}</table>`
+            : '<p style="color:#aaa;font-size:13px">Nog geen boeken — gebruik het zoekveld hieronder.</p>'}
         </div>` : ''}
 
         <div>
           <label>Outro</label>
           <textarea name="outro" rows="4" placeholder="Afsluitende tekst na de boeken…" style="width:100%">${article?.outro ?? ''}</textarea>
         </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
-            <input type="checkbox" name="published" value="1" ${article?.published ? 'checked' : ''}>
-            Gepubliceerd
-          </label>
+
+        ${publishControls}
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <button class="btn btn-primary" type="submit">${isNew ? 'Aanmaken' : 'Opslaan'}</button>
           ${deleteBtn}
+          ${viewBtn}
         </div>
       </div>
     </form>
-    ${searchForm}
+    ${searchSection}
   `;
 }
 
