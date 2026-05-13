@@ -17,6 +17,17 @@
       .filter(Boolean);
   }
 
+  async function addBook(bookId, btn) {
+    btn.disabled = true;
+    btn.textContent = '…';
+    await fetch('/admin/articles/' + articleId + '/books/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'book_id=' + bookId,
+    });
+    window.location.reload();
+  }
+
   async function search() {
     const q = input.value.trim();
     if (q.length < 2) { results.innerHTML = ''; return; }
@@ -43,11 +54,15 @@
           <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.title}</div>
           <div style="font-size:12px;color:#888">${b.author}${b.goodreads_rating ? ' · ★ ' + Number(b.goodreads_rating).toFixed(1) : ''}</div>
         </div>
-        <form method="post" action="/admin/articles/${articleId}/books/add" style="flex-shrink:0;margin:0">
-          <input type="hidden" name="book_id" value="${b.id}">
-          <button class="btn btn-primary" style="padding:5px 14px;font-size:12px;white-space:nowrap" type="submit">+ Toevoegen</button>
-        </form>
+        <button class="btn btn-primary" data-add-id="${b.id}"
+          style="flex-shrink:0;padding:5px 14px;font-size:12px;white-space:nowrap">
+          + Toevoegen
+        </button>
       </div>
     `).join('');
+
+    results.querySelectorAll('[data-add-id]').forEach(btn => {
+      btn.addEventListener('click', () => addBook(btn.dataset.addId, btn));
+    });
   }
 })();
