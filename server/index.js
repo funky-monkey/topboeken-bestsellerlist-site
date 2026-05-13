@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
+import { initSchema } from '../src/db/db.js';
 import { requireAuth } from './middleware/auth.js';
 import authRoutes       from './routes/auth.js';
 import dashboardRoutes  from './routes/dashboard.js';
@@ -13,6 +14,8 @@ import rebuildRoutes       from './routes/rebuild.js';
 import authStatusRoutes    from './routes/auth-status.js';
 import enrichCoversRoutes  from './routes/enrich-covers.js';
 import articlesRoutes      from './routes/articles.js';
+
+initSchema();
 
 const app  = express();
 const PORT = process.env.PORT ?? 3001;
